@@ -1,0 +1,121 @@
+# Review Checklist Template
+
+```yaml
+artifact: review-checklist
+feature_id: FEA-000
+feature_name: ""
+status: draft
+reviewer: ""
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+```
+
+## Required Artifacts
+
+- [ ] REASONS Canvas exists and is current.
+- [ ] Feature spec exists and is current.
+- [ ] Implementation plan exists and reflects completed work.
+- [ ] Test plan exists and reflects executed validation.
+- [ ] ADRs exist for long-lived architecture decisions.
+
+## Intent And Scope
+
+- [ ] Implementation matches the stated requirements and acceptance criteria.
+- [ ] Scope-out items were not implemented accidentally.
+- [ ] User, business, and operational outcomes are clear.
+- [ ] Any requirement changes were applied to specs before code.
+
+## Architecture
+
+- [ ] Change fits existing architectural boundaries.
+- [ ] New abstractions remove real complexity or enable approved extension points.
+- [ ] Dependencies are justified and versioned.
+- [ ] Data ownership, lifecycle, and migration behavior are clear.
+- [ ] Failure modes have safe behavior.
+
+## Code Quality
+
+- [ ] Code is simple, readable, and locally idiomatic.
+- [ ] Names reflect domain concepts.
+- [ ] Duplicated logic is intentional or removed.
+- [ ] Errors are handled through established patterns.
+- [ ] No dead code, debugging leftovers, or unrelated refactors.
+
+## Frontend And UX
+
+- [ ] UI follows existing design conventions.
+- [ ] Loading, empty, error, and success states are implemented.
+- [ ] Layout works across supported viewports.
+- [ ] Text does not overflow or overlap.
+- [ ] Forms provide clear labels, validation, and recovery.
+
+## Accessibility
+
+- [ ] Keyboard operation works without traps.
+- [ ] Focus order and focus restoration are correct.
+- [ ] Interactive controls have accessible names.
+- [ ] Semantic HTML or equivalent ARIA is used correctly.
+- [ ] Screen reader announcements are provided for dynamic state changes.
+- [ ] Color contrast meets WCAG AA.
+- [ ] Motion respects reduced-motion preferences.
+
+## Backend And API
+
+- [ ] API contracts are explicit and tested.
+- [ ] Validation rejects malformed, missing, and unauthorized input.
+- [ ] Error responses are consistent and safe.
+- [ ] Backward compatibility is addressed.
+- [ ] Idempotency and concurrency are handled where relevant.
+
+## Security And Privacy
+
+- [ ] Authentication and authorization are enforced server-side.
+- [ ] Input validation and output encoding are applied.
+- [ ] Sensitive data is redacted from logs, analytics, and errors.
+- [ ] Secrets are not committed or exposed to clients.
+- [ ] Dependency changes were reviewed.
+- [ ] Abuse paths, rate limits, and tenant isolation are considered.
+
+## Testing
+
+- [ ] Unit tests cover core logic.
+- [ ] Integration or contract tests cover boundaries.
+- [ ] End-to-end tests cover critical user flows where valuable.
+- [ ] Accessibility tests were automated or manually recorded.
+- [ ] Security and negative tests cover known risks.
+- [ ] Regression tests protect existing behavior.
+
+## Observability
+
+- [ ] Logs explain important decisions and failures.
+- [ ] Metrics cover success, failure, latency, and domain counters.
+- [ ] Traces connect cross-service flows.
+- [ ] Alerts, dashboards, or runbooks are updated when needed.
+
+## Performance
+
+- [ ] Performance budgets are defined and met.
+- [ ] Expensive work is bounded, cached, paginated, streamed, or queued.
+- [ ] Database queries and external calls are reviewed.
+- [ ] Client bundle or rendering cost is acceptable.
+
+## Spec-Code Sync
+
+- [ ] Final implementation behavior matches the REASONS Canvas.
+- [ ] Feature spec reflects actual API, UI, data, and AI behavior.
+- [ ] Implementation plan statuses are updated.
+- [ ] Test plan reflects actual validation.
+- [ ] Any deviations are documented with rationale.
+
+## Validation Evidence
+
+| Check | Command Or Method | Result | Notes |
+| --- | --- | --- | --- |
+| `<check>` | `<command>` | `<pass/fail>` | `<notes>` |
+
+## Reviewer Notes
+
+- Blocking findings:
+- Non-blocking findings:
+- Follow-up tickets:
+

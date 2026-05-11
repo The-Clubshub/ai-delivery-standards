@@ -1,0 +1,25 @@
+{
+  "name": "ai-delivery",
+  "version": "0.1.0",
+  "description": "Reusable standards, prompts, workflows, and bootstrap CLI for structured AI-assisted software delivery.",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "bin": {
+    "ai-delivery": "bin/ai-delivery.js"
+  },
+  "scripts": {
+    "check": "node --check bin/ai-delivery.js && node bin/ai-delivery.js help >/dev/null"
+  },
+  "files": [
+    "README.md",
+    "agents",
+    "templates",
+    "standards",
+    "workflows",
+    "examples",
+    "bin"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
