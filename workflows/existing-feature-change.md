@@ -157,7 +157,7 @@ Verify:
 ## Example Prompt: Amend Existing Feature
 
 ```text
-Use AGENT.md and ai-delivery-standards.
+Use AGENTS.md and ai-delivery-standards.
 
 Task: Amend an existing feature that predates this workflow.
 
@@ -169,7 +169,7 @@ Known constraints:
 - Preserve existing API response shape unless the spec approves a change.
 
 Required process:
-1. Read AGENT.md.
+1. Read AGENTS.md.
 2. Read docs/ai-delivery.md and docs/architecture/overview.md.
 3. Inspect current saved-search UI, API, data model, permissions, and tests.
 4. Create docs/features/FEA-<ID>-saved-searches/ if missing.
@@ -184,7 +184,7 @@ Required process:
 ## Example Prompt: Fix Existing Feature
 
 ```text
-Use AGENT.md and ai-delivery-standards.
+Use AGENTS.md and ai-delivery-standards.
 
 Task: Fix an existing feature that predates this workflow.
 
@@ -194,7 +194,7 @@ Expected behavior: The user sees a clear validation error before or during uploa
 Observed behavior: The request fails and the UI shows "Something went wrong."
 
 Required process:
-1. Read AGENT.md.
+1. Read AGENTS.md.
 2. Inspect current upload UI, API, storage validation, and tests.
 3. Create or update the feature artifact folder.
 4. Document current intended upload behavior and the defect.

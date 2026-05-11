@@ -25,6 +25,8 @@ const FEATURE_TEMPLATE_FILES = [
   "review-checklist.md"
 ];
 
+const DEFAULT_AGENT_INSTRUCTION_PATH = "AGENTS.md";
+
 main(process.argv.slice(2));
 
 function main(argv) {
@@ -80,8 +82,10 @@ function initProject(argv) {
   });
 
   const target = path.resolve(options.positionals[0] || ".");
-  const standardsPath = normalizeRelative(options["standards-path"] || "ai-delivery-standards");
-  const docsPath = normalizeRelative(options["docs-path"] || "docs");
+  const existingConfig = readConfig(target);
+  const standardsPath = normalizeRelative(options["standards-path"] || existingConfig.standardsPath || "ai-delivery-standards");
+  const docsPath = normalizeRelative(options["docs-path"] || existingConfig.docsPath || "docs");
+  const agentInstructionPath = DEFAULT_AGENT_INSTRUCTION_PATH;
   const featureId = options["feature-id"] || "FEA-001";
   const featureName = options["feature-name"] || "Initial Product Skeleton";
   const dryRun = Boolean(options["dry-run"]);
@@ -96,7 +100,7 @@ function initProject(argv) {
   ]);
 
   const configPath = path.join(target, ".ai-delivery.json");
-  const config = buildProjectConfig({ standardsPath, docsPath });
+  const config = buildProjectConfig({ ...existingConfig, standardsPath, docsPath, agentInstructionPath });
   writeText(configPath, `${JSON.stringify(config, null, 2)}\n`, { dryRun, overwrite: options.force });
 
   ensureAgentInstructions(target, config, { dryRun });
@@ -130,7 +134,8 @@ function syncStandards(argv) {
   const target = path.resolve(options.positionals[0] || ".");
   const existingConfig = readConfig(target);
   const standardsPath = normalizeRelative(options["standards-path"] || existingConfig.standardsPath || "ai-delivery-standards");
-  const config = buildProjectConfig({ ...existingConfig, standardsPath });
+  const agentInstructionPath = DEFAULT_AGENT_INSTRUCTION_PATH;
+  const config = buildProjectConfig({ ...existingConfig, standardsPath, agentInstructionPath });
   const destination = path.join(target, standardsPath);
   const dryRun = Boolean(options["dry-run"]);
   const copied = [];
@@ -202,7 +207,7 @@ function doctor(argv) {
   const config = readConfig(target);
   const standardsPath = path.join(target, config.standardsPath || "ai-delivery-standards");
   const docsPath = path.join(target, config.docsPath || "docs");
-  const agentInstructionPath = normalizeRelative(config.agentInstructionPath || "AGENT.md");
+  const agentInstructionPath = DEFAULT_AGENT_INSTRUCTION_PATH;
   const checks = [];
 
   checks.push(checkExists(path.join(target, ".ai-delivery.json"), "config .ai-delivery.json"));
@@ -314,8 +319,7 @@ function writeText(filePath, content, options = {}) {
 }
 
 function ensureAgentInstructions(target, config, options = {}) {
-  const agentInstructionPath = normalizeRelative(config.agentInstructionPath || "AGENT.md");
-  const agentDoc = path.join(target, agentInstructionPath);
+  const agentDoc = path.join(target, DEFAULT_AGENT_INSTRUCTION_PATH);
   writeText(agentDoc, productAgentTemplate(config), { dryRun: options.dryRun, overwrite: false });
 }
 
@@ -326,7 +330,7 @@ function buildProjectConfig(overrides = {}) {
   return {
     standardsPath,
     docsPath,
-    agentInstructionPath: normalizeRelative(overrides.agentInstructionPath || "AGENT.md"),
+    agentInstructionPath: normalizeRelative(overrides.agentInstructionPath || DEFAULT_AGENT_INSTRUCTION_PATH),
     featurePath: normalizeRelative(overrides.featurePath || path.posix.join(docsPath, "features")),
     decisionPath: normalizeRelative(overrides.decisionPath || path.posix.join(docsPath, "decisions")),
     requiredFeatureArtifacts: Array.isArray(overrides.requiredFeatureArtifacts)
@@ -468,12 +472,12 @@ Before finishing:
 ## Copy-Paste Agent Prompt
 
 \`\`\`text
-Use AGENT.md and ai-delivery-standards.
+Use AGENTS.md and ai-delivery-standards.
 
 Task: <describe task>
 
 Before implementation:
-1. Read AGENT.md.
+1. Read AGENTS.md.
 2. Read docs/ai-delivery.md and docs/architecture/overview.md.
 3. Use the relevant workflow in ai-delivery-standards/workflows/.
 4. Create or update the required feature or bug artifacts.
@@ -665,7 +669,7 @@ Usage:
 Commands:
   default    With no command, initialize the current directory.
   init       Install/sync standards, create product docs, and create first feature artifacts.
-  sync       Sync this standards bundle into a product repository and seed AGENT.md if missing.
+  sync       Sync this standards bundle into a product repository and seed AGENTS.md if missing.
   feature    Create a feature artifact folder from the required templates.
   doctor     Check whether a repository has the expected AI delivery setup.
 

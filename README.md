@@ -100,7 +100,7 @@ The `init` command copies the reusable standards into the product and creates th
 product-repo/
   ai-delivery-standards/
   .ai-delivery.json
-  AGENT.md
+  AGENTS.md
   docs/
     ai-delivery.md
     architecture/
@@ -114,7 +114,7 @@ product-repo/
         review-checklist.md
 ```
 
-`AGENT.md` is seeded only when the product repository does not already have one. Existing root agent instructions are kept in place so product-specific guidance is not overwritten by accident.
+`AGENTS.md` is the root instruction file. If the product repository already has `AGENTS.md`, the CLI keeps it so product-specific guidance is not overwritten by accident.
 
 After install, run the setup check:
 
@@ -129,7 +129,7 @@ cd /path/to/product-repo
 node /path/to/ai-delivery-standards/bin/ai-delivery.js sync .
 ```
 
-`sync` updates the vendored `ai-delivery-standards/` bundle and also creates `AGENT.md` if it is missing.
+`sync` updates the vendored `ai-delivery-standards/` bundle and also creates `AGENTS.md` if it is missing.
 
 For example, to install into `thecontracthub` from this workspace:
 
@@ -178,7 +178,7 @@ The CLI creates:
 
 - `ai-delivery-standards/` standards bundle in the target product
 - `.ai-delivery.json` configuration
-- `AGENT.md` root agent instruction file, if one does not already exist
+- `AGENTS.md` root agent instruction file, if one does not already exist
 - `docs/ai-delivery.md`
 - `docs/architecture/overview.md`
 - `docs/features/FEA-001-initial-product-skeleton/`
@@ -196,7 +196,7 @@ ai-delivery doctor ../my-product
 
 Use `sync` whenever this standards repository changes and a product needs the latest standards, templates, workflows, examples, and agent instructions.
 
-`sync` never overwrites an existing root `AGENT.md`; it only creates one for repositories that do not have agent instructions yet.
+`sync` never overwrites an existing root `AGENTS.md`; it only creates one for repositories that do not have agent instructions yet.
 
 ### Option 1: Copy Into A Product Repository
 
@@ -336,7 +336,7 @@ Agents must:
 
 Agent-specific guidance lives in:
 
-- `AGENT.md` in each product repository
+- `AGENTS.md` in each product repository
 - `agents/codex.md`
 - `agents/claude-code.md`
 - `agents/cursor.md`
@@ -349,7 +349,7 @@ Use `workflows/new-project.md`.
 Minimum project setup:
 
 1. Choose the standards version.
-2. Create root `AGENT.md`.
+2. Create root `AGENTS.md`.
 3. Create product-level `docs/ai-delivery.md`.
 4. Create initial architecture overview.
 5. Create baseline engineering, testing, security, and accessibility gates.
@@ -371,7 +371,7 @@ Use:
 - standards/accessibility.md
 
 Create:
-- AGENT.md
+- AGENTS.md
 - docs/ai-delivery.md
 - docs/architecture/overview.md
 - docs/features/FEA-001-initial-product-skeleton/
@@ -463,7 +463,7 @@ flowchart TD
 ### Existing Feature Amendment Prompt
 
 ```text
-Use AGENT.md and ai-delivery-standards.
+Use AGENTS.md and ai-delivery-standards.
 
 Task: Amend an existing feature that predates this workflow.
 
@@ -473,7 +473,7 @@ Known issue or reason for change:
 - <reason>
 
 Required process:
-1. Read AGENT.md.
+1. Read AGENTS.md.
 2. Read docs/ai-delivery.md and docs/architecture/overview.md.
 3. Inspect the current implementation, tests, routes, API contracts, data model,
    UI behavior, and related docs.
@@ -495,7 +495,7 @@ Required process:
 ### Existing Feature Fix Prompt
 
 ```text
-Use AGENT.md and ai-delivery-standards.
+Use AGENTS.md and ai-delivery-standards.
 
 Task: Fix an existing feature that predates this workflow.
 
@@ -505,7 +505,7 @@ Expected behavior: <description>
 Observed behavior: <description>
 
 Required process:
-1. Read AGENT.md.
+1. Read AGENTS.md.
 2. Inspect the current implementation and reproduce or bound the bug.
 3. Create docs/features/<ID>-<slug>/ if this feature has no artifacts yet.
 4. Document current intended behavior and the defect in the feature artifacts.
@@ -636,7 +636,7 @@ No feature is mergeable until:
 ### Generate A REASONS Canvas
 
 ```text
-Read AGENT.md first.
+Read AGENTS.md first.
 
 Using ai-delivery-standards/templates/reasons-canvas.md, create a REASONS Canvas
 for this feature.
@@ -657,7 +657,7 @@ Before writing the canvas:
 ### Implement From An Approved Plan
 
 ```text
-Read AGENT.md first.
+Read AGENTS.md first.
 
 Implement the approved plan in docs/features/<ID>-<slug>/implementation-plan.md.
 

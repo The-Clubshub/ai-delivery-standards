@@ -16,7 +16,7 @@ A new product repository has:
 | Artifact | Location |
 | --- | --- |
 | Product config | `.ai-delivery.json` |
-| Root agent instructions | `AGENT.md` |
+| Root agent instructions | `AGENTS.md` |
 | Standards bundle | `ai-delivery-standards/` |
 | AI delivery guide | `docs/ai-delivery.md` |
 | Architecture overview | `docs/architecture/overview.md` |
