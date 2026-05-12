@@ -80,6 +80,8 @@ cd /path/to/product-repo
 node /path/to/ai-delivery-standards/bin/ai-delivery.js init .
 ```
 
+Use the path to the central cloned standards repository, not a previously vendored `./ai-delivery-standards/bin/ai-delivery.js` inside the product. A stale vendored CLI can still have older behavior, such as creating `AGENT.md`; running the central clone refreshes the product bundle and creates `AGENTS.md`.
+
 You can also run it through `npx` from the cloned local package:
 
 ```bash
