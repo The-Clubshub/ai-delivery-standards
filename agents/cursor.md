@@ -16,6 +16,8 @@ Cursor should act as a constrained implementation assistant working from reposit
 
 ## Cursor Workflow
 
+For requests with multiple independent features, use `workflows/autonomous-feature-queue.md`: maintain `docs/features/feature-queue.md`, complete one feature at a time with validation and review evidence, then continue to the next unblocked feature without asking the user to continue.
+
 ### 1. Pin The Standards Context
 
 Attach or reference:
@@ -145,4 +147,3 @@ After artifacts:
 - Apply frontend, backend, accessibility, security, and testing standards.
 - Sync specs after the final diff.
 ```
-

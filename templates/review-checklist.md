@@ -85,6 +85,27 @@ updated: YYYY-MM-DD
 - [ ] Security and negative tests cover known risks.
 - [ ] Regression tests protect existing behavior.
 
+## Self-Review
+
+- [ ] What could break has been considered.
+- [ ] Over-engineering risk has been checked.
+- [ ] Conflicts with existing patterns have been checked.
+- [ ] Edge cases and negative paths have been checked.
+- [ ] Scope and spec-code sync have been checked.
+
+## Critic Review
+
+- [ ] Assumptions were challenged.
+- [ ] Risks, missing tests, regressions, and simpler alternatives were considered.
+- [ ] Requested changes are tied to acceptance criteria, standards, maintainability, security, or real defects.
+- [ ] Review/fix cycles stopped after acceptance criteria passed or after two cycles.
+
+## Review/Fix Cycle Log
+
+| Cycle | Reviewer | Findings | Fixes Applied | Result |
+| --- | --- | --- | --- | --- |
+| 1 | `<self/critic/name>` | `<findings>` | `<fixes>` | `<pass/fail/blocked>` |
+
 ## Observability
 
 - [ ] Logs explain important decisions and failures.
@@ -118,4 +139,3 @@ updated: YYYY-MM-DD
 - Blocking findings:
 - Non-blocking findings:
 - Follow-up tickets:
-

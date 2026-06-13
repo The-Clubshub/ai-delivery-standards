@@ -17,6 +17,8 @@ Claude Code should operate as a specification-first pair programmer. It should u
 
 ## Standard Claude Code Flow
 
+For requests with multiple independent features, use `workflows/autonomous-feature-queue.md`: maintain `docs/features/feature-queue.md`, complete one feature with validation and review evidence, then continue to the next unblocked feature without asking the user to continue.
+
 1. **Explore**
    - Read product docs, architecture notes, package scripts, tests, and relevant modules.
    - Identify the existing design system, API style, data access pattern, and testing approach.
@@ -78,6 +80,7 @@ Before presenting work as complete, Claude Code should answer:
 - What files changed and why?
 - Which standards were relevant?
 - What validation passed?
+- What self-review and critic-review findings were recorded?
 - What remains risky or unverified?
 
 ## Hallucination Controls
@@ -129,4 +132,3 @@ routes, data access, notification patterns, and tests. Ask only blocking
 questions. After the artifacts are complete, implement the approved operations,
 run validation, and sync specs with the final code.
 ```
-

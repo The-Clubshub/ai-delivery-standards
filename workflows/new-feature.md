@@ -4,6 +4,8 @@ Use this workflow for new user-facing, API, backend, infrastructure, or AI-enabl
 
 If the feature already exists in the application and you are changing or fixing it for the first time under this standards framework, use `workflows/existing-feature-change.md` instead.
 
+If the request contains multiple independent features, use `workflows/autonomous-feature-queue.md` to maintain the queue and run this workflow for each feature.
+
 ## Outcome
 
 A feature moves from intent to reviewed implementation with synchronized specs, tests, and code.

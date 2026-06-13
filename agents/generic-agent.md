@@ -30,6 +30,8 @@ The agent acts as a disciplined engineering collaborator:
 6. Update specs when the code or requirements change.
 7. Summarize evidence, risks, and remaining gaps.
 
+When the user gives multiple independent features, switch to `workflows/autonomous-feature-queue.md`: maintain an explicit queue, finish each feature with validation and review evidence, then continue to the next unblocked feature without asking the user to continue.
+
 ## Standard Workflow
 
 ```mermaid
@@ -53,6 +55,7 @@ flowchart TD
 | Request Type | Required Action |
 | --- | --- |
 | New project | Follow `workflows/new-project.md`. |
+| Multiple independent features | Follow `workflows/autonomous-feature-queue.md`, then run the relevant feature workflow for each item. |
 | New feature | Follow `workflows/new-feature.md`. |
 | Bug fix | Follow `workflows/bug-fix.md`. |
 | Refactor | Follow `workflows/refactor.md`. |
@@ -110,6 +113,8 @@ The agent reviews in this order:
 4. Tests: Do tests prove the acceptance criteria and safeguards?
 5. Standards: Are security, accessibility, UX, performance, and observability covered?
 6. Sync: Do specs match code?
+
+For implementation work, include both a self-review and a critic review. The critic may be a separate reviewer when tools support it, or a simulated adversarial pass when they do not. Apply fixes only when tied to acceptance criteria, standards, maintainability, security, accessibility, performance, observability, or real defects. Stop after acceptance criteria pass or after two review/fix cycles for the feature.
 
 ## Update Workflow
 
@@ -196,4 +201,3 @@ During implementation:
 - Keep specs and code synchronized.
 - Stop if reality diverges from the approved spec.
 ```
-

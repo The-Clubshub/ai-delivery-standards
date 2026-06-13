@@ -409,6 +409,24 @@ For a brand-new feature:
 9. Complete the review checklist.
 10. Sync specs with final code.
 
+## Autonomous Feature Queue Rule
+
+When one request contains multiple independent features:
+
+1. Use \`${config.standardsPath}/workflows/autonomous-feature-queue.md\`.
+2. Maintain \`${config.featurePath}/feature-queue.md\` from \`${config.standardsPath}/templates/feature-queue.md\`.
+3. Work one feature at a time.
+4. Restate the feature objective and acceptance criteria before implementation.
+5. Implement the smallest clean solution.
+6. Run relevant tests, lint, typecheck, build, or manual validation.
+7. Complete self-review and critic review.
+8. Apply fixes only when they improve correctness, maintainability, security, accessibility, performance, observability, or required user-facing behavior.
+9. Stop revising after acceptance criteria pass or after two review/fix cycles.
+10. Mark the feature complete with files changed, validation run, remaining risks, and next feature selected.
+11. Continue automatically to the next unblocked feature.
+
+Ask the user only when the workflow's stop conditions apply.
+
 ## Existing Feature Rule
 
 For a feature that already exists but predates this workflow:
@@ -492,6 +510,7 @@ During implementation:
 
 Before completion:
 - Run validation.
+- Complete self-review and critic review.
 - Complete the review checklist.
 - Sync specs with final behavior.
 \`\`\`
@@ -519,6 +538,8 @@ No implementation before specification.
 
 Agents must inspect the repository, create or update artifacts, implement only approved operations, validate changes, and sync specs with final code.
 
+When a request contains multiple independent features, agents must use the autonomous feature queue workflow, maintain \`${config.featurePath}/feature-queue.md\`, complete self-review and critic review for each feature, and continue to the next unblocked feature automatically.
+
 ## Local Paths
 
 | Purpose | Path |
@@ -543,6 +564,7 @@ Before merge:
 - Specs exist and are current.
 - Acceptance criteria map to tests.
 - Accessibility, security, testing, observability, and API standards are applied.
+- Self-review and critic review are recorded for AI-generated implementation work.
 - Validation evidence is recorded.
 - Specs match final implementation.
 `;

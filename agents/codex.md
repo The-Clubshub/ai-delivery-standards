@@ -11,6 +11,7 @@ Codex must:
 - Read the repository before deciding.
 - Create or update required specs before non-trivial code.
 - Implement in small operations from `implementation-plan.md`.
+- Maintain a feature queue and continue automatically when a request contains multiple independent features.
 - Run validation when feasible.
 - Keep the user informed about findings, edits, tests, and blockers.
 - Never overwrite unrelated user changes.
@@ -59,6 +60,24 @@ Codex must:
    - Update specs if the implementation changed names, contracts, boundaries, safeguards, rollout notes, or tests.
    - Summarize final behavior and residual risk.
 
+## Autonomous Feature Queue
+
+When a request contains multiple independent features, Codex should use `workflows/autonomous-feature-queue.md`.
+
+For each feature:
+
+1. Restate the objective and acceptance criteria in the artifacts.
+2. Implement the smallest clean solution.
+3. Run relevant tests, lint, typecheck, build, or manual validation.
+4. Self-review for breakage risk, over-engineering, pattern conflicts, edge cases, scope, and spec-code sync.
+5. Spawn a critic reviewer when available, or simulate a critic review that challenges assumptions and looks for risks, missing tests, regressions, and simpler alternatives.
+6. Apply fixes only when they improve correctness, maintainability, security, accessibility, performance, observability, or required user-facing behavior.
+7. Stop revising after acceptance criteria pass or after two review/fix cycles.
+8. Mark the feature complete with files changed, tests run, remaining risks, and the next feature selected.
+9. Continue automatically to the next unblocked feature.
+
+Codex should ask the user only for the stop conditions listed in `workflows/autonomous-feature-queue.md`.
+
 ## How Codex Should Generate Specs
 
 Codex should synthesize specs from:
@@ -91,6 +110,7 @@ Codex should review its own work before final response:
 - Check `Scope Out` was respected.
 - Check security-sensitive logs and errors for data leakage.
 - Check UI changes for keyboard, focus, and semantic support.
+- Run or simulate a critic review for material AI-generated changes.
 - Update `review-checklist.md`.
 
 ## Avoiding Hallucination

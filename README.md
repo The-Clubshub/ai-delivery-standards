@@ -13,7 +13,7 @@ The framework is inspired by Structured-Prompt-Driven Development (SPDD) and the
 | Agent behavior | How AI agents clarify, specify, implement, review, and sync changes | `agents/` |
 | Prompt artifacts | Reusable templates for REASONS Canvas, specs, plans, tests, and reviews | `templates/` |
 | Engineering quality | Code, architecture, frontend, backend, security, accessibility, observability, testing | `standards/` |
-| Delivery process | New project, feature, bug fix, refactor, reviews, release process | `workflows/` |
+| Delivery process | New project, feature queues, feature, bug fix, refactor, reviews, release process | `workflows/` |
 | Worked example | End-to-end feature artifacts for a scoped in-app help assistant | `examples/` |
 | Bootstrap CLI | Project scaffolding, feature artifact creation, standards sync, setup checks | `bin/ai-delivery.js` |
 
@@ -28,6 +28,8 @@ Every meaningful feature must have these artifacts committed with the code:
 3. Implementation plan
 4. Test plan
 5. Review checklist
+
+When one request contains multiple independent features, maintain `docs/features/feature-queue.md` from `templates/feature-queue.md` and use `workflows/autonomous-feature-queue.md` to continue through the queue until every item is complete or blocked.
 
 For defects, use `templates/bugfix-spec.md`. For design decisions with long-term consequences, add `templates/architecture-decision-record.md`.
 
@@ -57,7 +59,8 @@ ai-delivery-standards/
 | Norms and safeguards | `standards/` defines reusable engineering rules and non-negotiable boundaries. |
 | Prompt update | Requirement changes update specs first, then code. |
 | Spec-code sync | `workflows/spec-sync.md` updates artifacts when implementation changes. |
-| Iterative review | `workflows/ai-code-review.md` and `templates/review-checklist.md` review intent, code, tests, and sync. |
+| Autonomous queue execution | `workflows/autonomous-feature-queue.md` lets agents complete multi-feature requests without hand-holding while preserving stop conditions. |
+| Iterative review | `workflows/ai-code-review.md` and `templates/review-checklist.md` review intent, code, tests, self-review, critic review, and sync. |
 
 The team skills this framework encourages are abstraction first, alignment, and iterative review: think clearly about the model of the problem, align before generation, then review and refine in small loops.
 
@@ -330,10 +333,11 @@ Agents must:
 | --- | --- |
 | Spec first | Refuse to implement non-trivial work until the required artifacts exist or are created. |
 | Evidence grounded | Inspect existing code, tests, docs, and config before proposing implementation. |
+| Queue autonomous work | For multi-feature requests, maintain an explicit feature queue and continue to the next unblocked feature automatically. |
 | Scope controlled | Implement only what the approved spec and plan describe. |
 | Operation driven | Work through the implementation plan in small, testable operations. |
 | Standards bound | Apply the relevant files in `standards/` for every change. |
-| Reviewable output | Summarize changed files, validation results, and any spec drift. |
+| Reviewable output | Summarize changed files, validation results, self-review, critic-review findings, and any spec drift. |
 | Sync required | If code changes reveal a better design or corrected behavior, update the specs too. |
 
 Agent-specific guidance lives in:

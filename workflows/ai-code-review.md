@@ -93,7 +93,18 @@ If code differs from specs:
 - Change code if the difference is drift.
 - Add tests for the final decision.
 
-### 8. Record Findings
+### 8. Run Self-Review And Critic Review
+
+For AI-generated implementation work, record both:
+
+- Self-review: what could break, whether the solution is over-engineered, whether it conflicts with existing patterns, and whether edge cases are handled.
+- Critic review: a scope-bound challenge of assumptions, missing tests, regressions, simpler alternatives, security, accessibility, and generated-code risks.
+
+Apply fixes only when they improve correctness, maintainability, security, accessibility, performance, observability, or required user-facing behavior.
+
+For autonomous feature queue work, stop after acceptance criteria pass or after two review/fix cycles.
+
+### 9. Record Findings
 
 Prioritize findings:
 
@@ -128,4 +139,3 @@ Update review-checklist.md with findings and validation evidence.
 - [ ] Generated-code risks are checked.
 - [ ] Specs are synchronized.
 - [ ] Findings are recorded by severity.
-
