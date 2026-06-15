@@ -34,6 +34,7 @@ Use `templates/feature-queue.md` for the queue log.
 - Maintain the queue explicitly.
 - Work one feature at a time.
 - Select the next feature from the queue without asking the user to continue.
+- Do not ask for approval before starting the next queued feature unless a stop condition applies.
 - Prefer dependency order first, then smallest safe feature, then highest user value.
 - Do not bundle unrelated feature implementations into one diff unless the specs share the same operation.
 - Keep each feature's artifacts synchronized before moving to the next feature.
@@ -158,6 +159,8 @@ Before moving to the next queue item, update the queue log and feature artifacts
 ### 9. Continue Automatically
 
 Pick the next unblocked feature in the queue and repeat the loop.
+
+The agent may announce the next selected feature for traceability, but must not wait for user approval before starting it unless a stop condition applies.
 
 Only stop when:
 

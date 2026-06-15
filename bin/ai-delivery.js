@@ -361,6 +361,60 @@ No non-trivial implementation before specification.
 
 For new features, bug fixes, refactors, security-sensitive changes, UI changes, API changes, data model changes, infrastructure changes, and AI behavior changes, the agent must create or update the required artifacts before editing production code.
 
+## Higher-Precedence Instruction Order
+
+When instructions conflict, follow the highest-precedence applicable source:
+
+1. Active system, developer, platform, and tool instructions.
+2. The user's current request.
+3. The nearest repository \`AGENTS.md\` or equivalent agent instruction file.
+4. Feature, bug, refactor, architecture, and product docs in this repository.
+5. Vendored \`ai-delivery-standards\` guidance.
+6. General model defaults or habits.
+
+If a higher-precedence instruction conflicts with a lower-precedence spec, update the durable spec first when the change is non-trivial. If the conflict creates a safety, data, authorization, payment, legal, or destructive-change risk, stop and ask.
+
+## Trivial Versus Non-Trivial Work
+
+Trivial work can proceed without creating the full feature artifact set when it does not change runtime behavior, public contracts, security posture, data, accessibility, or user-visible workflow.
+
+Examples of trivial work:
+
+- Local typo fix in copy, comments, or docs.
+- Docs-only correction that does not change behavior or process requirements.
+- Formatting-only change with no semantic impact.
+- Narrow test description rename with no assertion or fixture behavior change.
+
+Examples of non-trivial work:
+
+- Route, navigation, or UI state behavior change.
+- API, event, schema, data model, permission, or persistence change.
+- Authentication, authorization, privacy, payment, security, infrastructure, deployment, or migration change.
+- AI behavior, prompt, tool-use, retrieval, grounding, or output contract change.
+- Dependency addition, removal, or major configuration change.
+- Test change that encodes new product behavior or changes the expected contract.
+
+When uncertain, treat the work as non-trivial and create or update the relevant artifact.
+
+## Runtime Command Policy
+
+Use the command policy declared by this repository, nearest \`AGENTS.md\`, package manager files, or project docs. Do not switch package managers casually.
+
+If this project states Bun-only, use Bun commands such as \`bun install\`, \`bun run <script>\`, and \`bun test\`; do not use \`npm\`, \`yarn\`, or \`pnpm\` unless the project explicitly allows it. If no policy exists, inspect local scripts and lockfiles before choosing commands.
+
+## 30-Second Decision Matrix
+
+| Task Type | Required Docs | Tests / Commands |
+| --- | --- | --- |
+| Local typo, formatting, or comment-only fix | No feature docs unless policy requires them | Run the smallest relevant formatter, lint, or no-op validation and state if none is needed. |
+| Docs-only correction | Update the affected doc | Check links, examples, or generated output when touched. |
+| New feature | Feature artifacts from \`templates/\` | Tests from \`test-plan.md\`, plus lint/typecheck/build when relevant. |
+| Existing feature change | Existing feature workflow and baseline behavior docs | Regression tests for current behavior plus tests for the amendment. |
+| Bug fix | \`bugfix-spec.md\`, plus related feature specs if behavior changes | Reproduction or bounded evidence, regression test, focused affected suite. |
+| API, data, auth, security, infrastructure, or migration change | Feature spec plus ADR when long-lived architecture changes | Contract, integration, security, migration, and rollback validation. |
+| Refactor | Refactor plan and test plan | Characterization tests, focused suite, broader checks when shared behavior changed. |
+| Multiple independent features | \`feature-queue.md\` plus per-feature artifacts | Complete validation, self-review, and critic review per feature. |
+
 ## Required Reading Order
 
 Before planning or implementation, read:
@@ -423,7 +477,7 @@ When one request contains multiple independent features:
 8. Apply fixes only when they improve correctness, maintainability, security, accessibility, performance, observability, or required user-facing behavior.
 9. Stop revising after acceptance criteria pass or after two review/fix cycles.
 10. Mark the feature complete with files changed, validation run, remaining risks, and next feature selected.
-11. Continue automatically to the next unblocked feature.
+11. Continue automatically to the next unblocked feature without asking for approval to start it.
 
 Ask the user only when the workflow's stop conditions apply.
 
@@ -538,7 +592,7 @@ No implementation before specification.
 
 Agents must inspect the repository, create or update artifacts, implement only approved operations, validate changes, and sync specs with final code.
 
-When a request contains multiple independent features, agents must use the autonomous feature queue workflow, maintain \`${config.featurePath}/feature-queue.md\`, complete self-review and critic review for each feature, and continue to the next unblocked feature automatically.
+When a request contains multiple independent features, agents must use the autonomous feature queue workflow, maintain \`${config.featurePath}/feature-queue.md\`, complete self-review and critic review for each feature, and continue to the next unblocked feature automatically without per-feature approval prompts.
 
 ## Local Paths
 

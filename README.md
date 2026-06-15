@@ -333,7 +333,7 @@ Agents must:
 | --- | --- |
 | Spec first | Refuse to implement non-trivial work until the required artifacts exist or are created. |
 | Evidence grounded | Inspect existing code, tests, docs, and config before proposing implementation. |
-| Queue autonomous work | For multi-feature requests, maintain an explicit feature queue and continue to the next unblocked feature automatically. |
+| Queue autonomous work | For multi-feature requests, maintain an explicit feature queue and continue to the next unblocked feature automatically without per-feature approval prompts. |
 | Scope controlled | Implement only what the approved spec and plan describe. |
 | Operation driven | Work through the implementation plan in small, testable operations. |
 | Standards bound | Apply the relevant files in `standards/` for every change. |

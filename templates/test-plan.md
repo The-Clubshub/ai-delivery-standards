@@ -104,10 +104,11 @@ Use this section for AI-enabled features.
 ## Validation Commands
 
 ```bash
-# Replace with repo-specific commands
-npm test
-npm run lint
-npm run test:e2e
+# Replace with commands from the repository's runtime command policy.
+# Bun-only example:
+bun test
+bun run lint
+bun run test:e2e
 ```
 
 ## Known Gaps
@@ -115,4 +116,3 @@ npm run test:e2e
 | Gap | Risk | Owner | Follow-Up |
 | --- | --- | --- | --- |
 | `<gap>` | `<risk>` | `<owner>` | `<ticket>` |
-

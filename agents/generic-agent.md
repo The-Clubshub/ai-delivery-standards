@@ -6,6 +6,19 @@ Use these rules for any AI coding assistant that works in a repository governed 
 
 Do not implement non-trivial software changes before the required specification artifacts exist and are coherent.
 
+## Higher-Precedence Instruction Order
+
+When instructions conflict, follow the highest-precedence applicable source:
+
+1. Active system, developer, platform, and tool instructions.
+2. The user's current request.
+3. The nearest repository `AGENTS.md` or equivalent agent instruction file.
+4. Feature, bug, refactor, architecture, and product docs in the repository.
+5. Vendored `ai-delivery-standards` guidance.
+6. General model defaults or habits.
+
+If a higher-precedence instruction conflicts with a lower-precedence spec, update the durable spec first when the change is non-trivial. If the conflict creates a safety, data, authorization, payment, legal, or destructive-change risk, stop and ask.
+
 Required feature artifacts:
 
 - `reasons-canvas.md`
@@ -17,6 +30,47 @@ Required feature artifacts:
 Required bugfix artifact:
 
 - `bugfix-spec.md`
+
+## Trivial Versus Non-Trivial Work
+
+Trivial work can proceed without creating the full feature artifact set when it does not change runtime behavior, public contracts, security posture, data, accessibility, or user-visible workflow.
+
+Examples of trivial work:
+
+- Local typo fix in copy, comments, or docs.
+- Docs-only correction that does not change behavior or process requirements.
+- Formatting-only change with no semantic impact.
+- Narrow test description rename with no assertion or fixture behavior change.
+
+Examples of non-trivial work:
+
+- Route, navigation, or UI state behavior change.
+- API, event, schema, data model, permission, or persistence change.
+- Authentication, authorization, privacy, payment, security, infrastructure, deployment, or migration change.
+- AI behavior, prompt, tool-use, retrieval, grounding, or output contract change.
+- Dependency addition, removal, or major configuration change.
+- Test change that encodes new product behavior or changes the expected contract.
+
+When uncertain, treat the work as non-trivial and create or update the relevant artifact.
+
+## Runtime Command Policy
+
+Use the command policy declared by the product repository, nearest `AGENTS.md`, package manager files, or project docs. Do not switch package managers casually.
+
+If a project states Bun-only, use Bun commands such as `bun install`, `bun run <script>`, and `bun test`; do not use `npm`, `yarn`, or `pnpm` unless the project explicitly allows it. If no policy exists, inspect local scripts and lockfiles before choosing commands.
+
+## 30-Second Decision Matrix
+
+| Task Type | Required Docs | Tests / Commands |
+| --- | --- | --- |
+| Local typo, formatting, or comment-only fix | No feature docs unless policy requires them | Run the smallest relevant formatter, lint, or no-op validation and state if none is needed. |
+| Docs-only correction | Update the affected doc | Check links, examples, or generated output when touched. |
+| New feature | Feature artifacts from `templates/` | Tests from `test-plan.md`, plus lint/typecheck/build when relevant. |
+| Existing feature change | Existing feature workflow and baseline behavior docs | Regression tests for current behavior plus tests for the amendment. |
+| Bug fix | `bugfix-spec.md`, plus related feature specs if behavior changes | Reproduction or bounded evidence, regression test, focused affected suite. |
+| API, data, auth, security, infrastructure, or migration change | Feature spec plus ADR when long-lived architecture changes | Contract, integration, security, migration, and rollback validation. |
+| Refactor | Refactor plan and test plan | Characterization tests, focused suite, broader checks when shared behavior changed. |
+| Multiple independent features | `feature-queue.md` plus per-feature artifacts | Complete validation, self-review, and critic review per feature. |
 
 ## Operating Mode
 
@@ -30,7 +84,7 @@ The agent acts as a disciplined engineering collaborator:
 6. Update specs when the code or requirements change.
 7. Summarize evidence, risks, and remaining gaps.
 
-When the user gives multiple independent features, switch to `workflows/autonomous-feature-queue.md`: maintain an explicit queue, finish each feature with validation and review evidence, then continue to the next unblocked feature without asking the user to continue.
+When the user gives multiple independent features, switch to `workflows/autonomous-feature-queue.md`: maintain an explicit queue, finish each feature with validation and review evidence, then continue to the next unblocked feature without asking the user to continue or approve the next start. Ask only when a hard stop condition applies.
 
 ## Standard Workflow
 

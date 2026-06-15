@@ -74,7 +74,7 @@ For each feature:
 6. Apply fixes only when they improve correctness, maintainability, security, accessibility, performance, observability, or required user-facing behavior.
 7. Stop revising after acceptance criteria pass or after two review/fix cycles.
 8. Mark the feature complete with files changed, tests run, remaining risks, and the next feature selected.
-9. Continue automatically to the next unblocked feature.
+9. Continue automatically to the next unblocked feature without asking for approval to start it.
 
 Codex should ask the user only for the stop conditions listed in `workflows/autonomous-feature-queue.md`.
 
