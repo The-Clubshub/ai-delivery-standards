@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-delivery-standards.local/schemas/feature-state.schema.json",
+  "title": "AI Delivery V2 Feature State",
+  "type": "object",
+  "required": ["artifact", "operatingSystemVersion", "featureId", "title", "state", "activeRole", "approvals", "artifacts"],
+  "properties": {
+    "artifact": { "const": "feature-state" },
+    "operatingSystemVersion": { "const": "v2" },
+    "featureId": { "type": "string" },
+    "title": { "type": "string" },
+    "state": {
+      "enum": [
+        "intake",
+        "requirements_draft",
+        "requirements_pending_review",
+        "requirements_approved",
+        "plan_draft",
+        "plan_pending_review",
+        "plan_approved",
+        "building",
+        "reviewing",
+        "testing",
+        "ready_for_human_review",
+        "complete",
+        "blocked"
+      ]
+    },
+    "previousState": { "type": ["string", "null"] },
+    "resumeState": { "type": ["string", "null"] },
+    "activeRole": { "type": "string" },
+    "artifacts": { "type": "object" },
+    "approvals": {
+      "type": "object",
+      "required": ["requirements", "plan", "implementation"]
+    },
+    "blockers": { "type": "array" }
+  }
+}
+

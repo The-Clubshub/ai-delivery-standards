@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-delivery-standards.local/schemas/ai-config.schema.json",
+  "title": "AI Delivery V2 Config",
+  "type": "object",
+  "required": ["operatingSystemVersion", "standardsPath", "aiPath", "featurePath", "approvalPolicy"],
+  "properties": {
+    "operatingSystemVersion": { "const": "v2" },
+    "standardsVersion": { "type": "string" },
+    "standardsPath": { "type": "string" },
+    "agentInstructionPath": { "type": "string" },
+    "docsPath": { "type": "string" },
+    "aiPath": { "type": "string" },
+    "featurePath": { "type": "string" },
+    "legacyFeaturePath": { "type": "string" },
+    "decisionPath": { "type": "string" },
+    "commandProtocol": { "type": "string" },
+    "approvalPolicy": {
+      "type": "object",
+      "required": ["requirements", "plan", "implementation"],
+      "properties": {
+        "requirements": { "enum": ["human_required"] },
+        "plan": { "enum": ["human_required"] },
+        "implementation": { "enum": ["human_required"] }
+      }
+    },
+    "requiredFeatureArtifacts": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
+

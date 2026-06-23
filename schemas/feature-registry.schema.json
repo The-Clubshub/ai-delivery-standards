@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-delivery-standards.local/schemas/feature-registry.schema.json",
+  "title": "AI Delivery V2 Feature Registry",
+  "type": "object",
+  "required": ["artifact", "operatingSystemVersion", "features"],
+  "properties": {
+    "artifact": { "const": "feature-registry" },
+    "operatingSystemVersion": { "const": "v2" },
+    "activeFeatureId": { "type": ["string", "null"] },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "path", "state"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "path": { "type": "string" },
+          "state": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+

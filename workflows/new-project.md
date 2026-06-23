@@ -1,30 +1,31 @@
 # Workflow: Start A New Project
 
-Use this workflow when initializing a greenfield product or adding `ai-delivery-standards` to a newly created repository.
+Use this workflow when initializing a greenfield product or adding `ai-delivery-standards` V2 to a repository.
 
 ## Outcome
 
-A new product repository has:
+A product repository has:
 
 - AI delivery standards installed or referenced.
-- Initial architecture and quality gates documented.
-- First feature artifacts created before application implementation.
-- CI and review expectations defined.
+- `.ai/` operating-system control plane.
+- Root `AGENTS.md` bootloader.
+- Initial project memory and quality gates.
+- First feature lifecycle artifacts created before application implementation.
 
 ## Required Artifacts
 
 | Artifact | Location |
 | --- | --- |
-| Product config | `.ai-delivery.json` |
+| Legacy compatibility config | `.ai-delivery.json` |
+| V2 config | `.ai/config.json` |
+| Project state | `.ai/state.json` |
+| Feature registry | `.ai/registry.json` |
+| Project memory | `.ai/memory/` |
 | Root agent instructions | `AGENTS.md` |
 | Standards bundle | `ai-delivery-standards/` |
 | AI delivery guide | `docs/ai-delivery.md` |
 | Architecture overview | `docs/architecture/overview.md` |
-| First feature REASONS Canvas | `docs/features/FEA-001-<slug>/reasons-canvas.md` |
-| First feature spec | `docs/features/FEA-001-<slug>/feature-spec.md` |
-| First implementation plan | `docs/features/FEA-001-<slug>/implementation-plan.md` |
-| First test plan | `docs/features/FEA-001-<slug>/test-plan.md` |
-| First review checklist | `docs/features/FEA-001-<slug>/review-checklist.md` |
+| First feature lifecycle | `docs/features/FEA-001/` |
 
 ## Steps
 
@@ -33,7 +34,7 @@ A new product repository has:
 Preferred command:
 
 ```bash
-ai-delivery \
+ai-delivery init . \
   --feature-id FEA-001 \
   --feature-name "Initial Product Skeleton"
 ```
@@ -44,28 +45,29 @@ For a product in another directory:
 ai-delivery init ../my-product
 ```
 
-This creates the standards bundle, product config, baseline docs, and first feature artifacts.
+This creates the standards bundle, V2 operating-system files, product docs, and first feature artifacts.
 
 ### 2. Establish Standards Version
-
-Choose whether to copy this repository into the product or reference a central version.
 
 Record:
 
 - Standards version or commit SHA.
 - Required agent instruction file.
 - Product-specific overrides.
+- Approval policy.
+
+The CLI writes this to `.ai/config.json`.
 
 ### 3. Create Product AI Delivery Guide
 
 Create `docs/ai-delivery.md` with:
 
 - Standards version.
-- Required artifacts.
+- `.ai/` paths.
+- Required lifecycle states.
 - Agent behavior rules.
-- Branch and PR naming conventions.
+- Approval gates.
 - Quality gates.
-- How specs stay synchronized with code.
 
 ### 4. Define Initial Architecture
 
@@ -81,9 +83,21 @@ Create `docs/architecture/overview.md` with:
 - Security boundary.
 - Observability baseline.
 
-### 5. Define Baseline Quality Gates
+### 5. Define Project Memory
 
-Document commands for:
+Populate:
+
+- `.ai/memory/project.md`
+- `.ai/memory/glossary.md`
+- `.ai/memory/constraints.md`
+- `.ai/memory/decisions.md`
+- `.ai/memory/validation.md`
+
+Agents must use these files instead of relying on chat history.
+
+### 6. Define Baseline Quality Gates
+
+Document commands in `.ai/memory/validation.md` for:
 
 - Formatting
 - Linting
@@ -95,98 +109,67 @@ Document commands for:
 - Security checks
 - Build verification
 
-If a command does not exist yet, create a follow-up task with owner and target date.
+If a command does not exist yet, record the gap instead of inventing one.
 
-### 6. Create First Feature Artifacts
+### 7. Create First Feature Lifecycle
 
-Before writing production code, create the first feature folder:
+Before writing production code, create:
 
 ```text
-docs/features/FEA-001-initial-product-skeleton/
+docs/features/FEA-001/
+  state.json
+  requirements.md
+  plan.md
+  tests.md
+  review.md
+  approval.md
+  memory.md
+  activity.md
+  handoff.md
 ```
 
-Use the templates:
-
-- `templates/reasons-canvas.md`
-- `templates/feature-spec.md`
-- `templates/implementation-plan.md`
-- `templates/test-plan.md`
-- `templates/review-checklist.md`
-
-CLI alternative:
+CLI shortcut:
 
 ```bash
 ai-delivery feature FEA-001 "Initial Product Skeleton"
 ```
 
-### 7. Review Specification
+### 8. Approve Requirements
 
-Review:
-
-- Scope is clear.
-- Acceptance criteria are testable.
-- Architecture boundary is plausible.
-- Security and accessibility requirements are explicit.
-- Implementation operations are small.
-- Test plan maps to acceptance criteria.
-
-### 8. Implement Project Skeleton
-
-Only after spec review:
-
-- Scaffold application.
-- Add baseline tests.
-- Add CI commands.
-- Add health check or smoke test.
-- Add minimal deployment configuration if in scope.
-
-### 9. Sync And Commit
-
-Update artifacts with final decisions and commands.
-
-Resync standards after framework updates:
-
-```bash
-ai-delivery sync .
-ai-delivery doctor .
-```
-
-Commit sequence:
+Do not plan until requirements are approved:
 
 ```text
-docs(FEA-001): add project delivery standards and initial specs
-feat(FEA-001): scaffold product skeleton
-test(FEA-001): add baseline validation
-docs(FEA-001): sync implementation details
+/approve-requirements
 ```
 
-## Example Prompt
+### 9. Approve Plan
+
+Do not scaffold application code until the plan is approved:
 
 ```text
-Initialize this repository using ai-delivery-standards.
-
-Product:
-<name and short description>
-
-Constraints:
-- <tech stack>
-- <deployment target>
-- <security/compliance expectations>
-
-Required:
-1. Create docs/ai-delivery.md.
-2. Create docs/architecture/overview.md.
-3. Create docs/features/FEA-001-initial-product-skeleton/ with all required artifacts.
-4. Do not scaffold production application code until the artifacts are complete.
-5. After implementation, sync the specs with final commands, structure, and known gaps.
+/approve-plan
 ```
+
+### 10. Build, Review, Test, Complete
+
+Follow:
+
+```text
+/build
+/review
+/test
+/complete
+```
+
+`/complete` requires human implementation approval.
 
 ## Quality Gates
 
-- [ ] Standards version recorded.
-- [ ] Required artifacts exist.
-- [ ] First feature has acceptance criteria.
+- [ ] `.ai/config.json` exists.
+- [ ] `.ai/registry.json` identifies the active feature.
+- [ ] `docs/features/FEA-001/state.json` exists.
+- [ ] Requirements approval exists before planning.
+- [ ] Plan approval exists before building.
 - [ ] CI or validation commands are documented.
 - [ ] Security and accessibility baselines are defined.
-- [ ] Specs are committed before implementation.
 - [ ] Final specs match the created project skeleton.

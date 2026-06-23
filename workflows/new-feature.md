@@ -1,108 +1,144 @@
 # Workflow: Create A New Feature
 
-Use this workflow for new user-facing, API, backend, infrastructure, or AI-enabled features.
+Use this workflow for new user-facing, API, backend, infrastructure, or AI-enabled features under the V2 operating system.
 
-If the feature already exists in the application and you are changing or fixing it for the first time under this standards framework, use `workflows/existing-feature-change.md` instead.
+If the feature already exists in the application and you are changing or fixing it for the first time under this standards framework, use `workflows/existing-feature-change.md` and migrate enough lifecycle state to `docs/features/<ID>/` before implementation.
 
-If the request contains multiple independent features, use `workflows/autonomous-feature-queue.md` to maintain the queue and run this workflow for each feature.
+If the request contains multiple independent features, use `.ai/queues/active.md` and work one feature lifecycle entry at a time.
 
 ## Outcome
 
-A feature moves from intent to reviewed implementation with synchronized specs, tests, and code.
+A feature moves from intent to human-approved requirements, human-approved plan, implementation, AI review, testing, human review, and completion with synchronized state.
 
 ## Required Artifacts
 
 Create:
 
 ```text
-docs/features/<ID>-<slug>/
-  reasons-canvas.md
-  feature-spec.md
-  implementation-plan.md
-  test-plan.md
-  review-checklist.md
+docs/features/<ID>/
+  state.json
+  requirements.md
+  plan.md
+  tests.md
+  review.md
+  approval.md
+  memory.md
+  activity.md
+  handoff.md
 ```
 
-Add ADRs when the feature introduces long-lived architecture decisions.
+Add ADRs in `docs/decisions/` when the feature introduces long-lived architecture decisions.
+
+## Required State Flow
+
+```text
+intake
+-> requirements_draft
+-> requirements_pending_review
+-> requirements_approved
+-> plan_draft
+-> plan_pending_review
+-> plan_approved
+-> building
+-> reviewing
+-> testing
+-> ready_for_human_review
+-> complete
+```
+
+The feature may enter `blocked` from any non-terminal state.
 
 ## Steps
 
-### 1. Intake
+### 1. Start Feature
 
-Capture:
-
-- Feature name
-- Problem statement
-- Target users
-- Business value
-- Constraints
-- Deadline or release target
-- Known scope out
-
-### 2. Inspect Existing Context
-
-Read:
-
-- Existing product docs
-- Related feature specs
-- Architecture overview
-- Relevant code and tests
-- API contracts
-- UI routes and components
-- Standards in this repository
-
-### 3. Create REASONS Canvas
-
-Use `templates/reasons-canvas.md`.
-
-CLI shortcut for the full artifact folder:
+Use:
 
 ```bash
 ai-delivery feature FEA-042 "Scoped Help Assistant"
 ```
 
-Minimum content:
+This creates `docs/features/FEA-042/`, updates `.ai/registry.json`, and makes the feature active in `.ai/state.json`.
 
-- Requirements with acceptance criteria.
-- Entities and domain vocabulary.
-- Approach and trade-offs.
-- Structure and impacted modules.
-- Operations.
-- Norms.
-- Safeguards.
+### 2. Requirements Draft
 
-### 4. Create Feature Spec
+The Requirements Agent fills `requirements.md` with:
 
-Use `templates/feature-spec.md`.
+- Feature name
+- Problem statement
+- Target users
+- Scope in
+- Scope out
+- Acceptance criteria
+- Domain vocabulary and entities
+- UX, API, AI behavior, and non-functional requirements where relevant
+- Safeguards
+- Open questions
 
-Include:
+Do not plan implementation or edit production code in this state.
 
-- Goals and non-goals.
-- User experience.
-- Functional requirements.
-- Non-functional requirements.
-- API or interface contracts.
-- AI behavior contract if relevant.
-- Observability and rollout.
-- Acceptance criteria traceability.
+### 3. Requirements Review
 
-### 5. Create Implementation Plan
+Move to `requirements_pending_review` when requirements are testable and bounded.
 
-Use `templates/implementation-plan.md`.
+Do not continue to planning until a human approves requirements with:
 
-Each operation must include:
+```text
+/approve-requirements
+```
 
-- Purpose.
-- Files or modules.
+Approval must be recorded in `approval.md` and mirrored in `state.json`.
+
+### 4. Plan Draft
+
+After requirements approval, the Planner Agent fills:
+
+- `plan.md`
+- `tests.md`
+
+The plan must include ordered operations, expected files or modules where known, validation, rollback, dependencies, configuration, security, accessibility, observability, and rollout notes.
+
+### 5. Plan Review
+
+Move to `plan_pending_review` when the implementation plan and test plan are ready.
+
+Do not build until a human approves the plan with:
+
+```text
+/approve-plan
+```
+
+Approval must be recorded in `approval.md` and mirrored in `state.json`.
+
+### 6. Build
+
+The Builder Agent may build only when state is `plan_approved`.
+
+Rules:
+
+- Implement only approved operations.
+- Work operation by operation.
+- Keep changes narrow.
+- Add or update tests with behavior changes.
+- Return to `requirements_draft` or `plan_draft` if approved artifacts no longer match reality.
+
+### 7. Review
+
+The Reviewer Agent reviews implementation against:
+
+- Approved requirements.
+- Approved plan.
 - Tests.
-- Validation.
-- Rollback or mitigation.
+- Security, accessibility, performance, observability, API, frontend, backend, and engineering standards.
+- Generated-code risks.
 
-### 6. Create Test Plan
+Material findings return the feature to `building`.
 
-Use `templates/test-plan.md`.
+### 8. Test
 
-Cover:
+The Tester Agent records validation in `tests.md`.
+
+Run the smallest meaningful checks first and broaden based on risk:
 
 - Unit tests.
 - Integration or contract tests.
@@ -110,80 +146,38 @@ Cover:
 - Accessibility tests for UI.
 - Security tests for protected behavior.
 - AI evaluations for AI features.
-- Performance checks where relevant.
+- Performance and observability checks where relevant.
 
-### 7. Spec Review Gate
+Failed validation returns to `building` or `reviewing`.
 
-Do not implement until:
+### 9. Human Review
 
-- Acceptance criteria are testable.
-- Scope out is clear.
-- Data and permission boundaries are defined.
-- Safeguards are enforceable.
-- Implementation operations are ordered.
-- Test plan covers the main risks.
+When review and testing are complete, move to `ready_for_human_review`.
 
-### 8. Implement Operation By Operation
+The Sync Agent prepares the human review summary and ensures:
 
-For each operation:
+- `state.json` is current.
+- `approval.md` shows requirements and plan approvals.
+- `review.md` records findings.
+- `tests.md` records validation evidence.
+- `handoff.md` names the next allowed command.
 
-1. Update plan status to `In progress`.
-2. Add or update tests where feasible.
-3. Implement the change.
-4. Run focused validation.
-5. Update plan status to `Done`.
-6. Record unexpected decisions.
+### 10. Complete
 
-### 9. Review AI-Generated Code
-
-Use `review-checklist.md`.
-
-Check:
-
-- Intent alignment.
-- Scope control.
-- Architecture fit.
-- Accessibility.
-- Security.
-- Testing.
-- Observability.
-- Spec-code sync.
-
-### 10. Sync Specs
-
-Before merge:
-
-- Update contracts with final request/response shapes.
-- Update operations with actual files and statuses.
-- Update test plan with actual validation.
-- Record deferred work and known gaps.
-
-## Example Prompt
+Only a human may complete the feature:
 
 ```text
-Create and implement a new feature under ai-delivery-standards.
-
-Feature: <feature name>
-Problem: <problem>
-Users: <users>
-Constraints:
-- <constraint>
-
-Process:
-1. Inspect existing code and docs.
-2. Create docs/features/<ID>-<slug>/ with all required artifacts.
-3. Stop if acceptance criteria, authorization, data ownership, or safety boundaries are unclear.
-4. Implement only the operations in implementation-plan.md.
-5. Add tests from test-plan.md.
-6. Complete review-checklist.md.
-7. Sync specs with final code.
+/complete
 ```
+
+This records implementation approval in `approval.md`, mirrors it in `state.json`, and moves the feature to `complete`.
 
 ## Quality Gates
 
-- [ ] Required artifacts exist.
-- [ ] Acceptance criteria map to tests.
-- [ ] Implementation follows ordered operations.
-- [ ] Standards are applied.
-- [ ] Validation evidence is recorded.
-- [ ] Specs match final behavior.
+- [ ] V2 feature folder exists.
+- [ ] Requirements approval exists before planning.
+- [ ] Plan approval exists before building.
+- [ ] Review stage completed.
+- [ ] Testing stage completed or gaps accepted.
+- [ ] Human implementation approval exists before `complete`.
+- [ ] Specs match final implementation.

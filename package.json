@@ -13,6 +13,9 @@
   "files": [
     "README.md",
     "agents",
+    "commands",
+    "roles",
+    "schemas",
     "templates",
     "standards",
     "workflows",
