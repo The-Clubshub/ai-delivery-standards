@@ -31,7 +31,7 @@ V1 includes CLI commands:
 - `ai-delivery feature`
 - `ai-delivery doctor`
 
-V1 does not define lifecycle commands such as `/approve-plan`, `/build`, `/review`, or `/complete`. V2 should preserve the existing CLI setup commands and add universal lifecycle commands that can be executed in chat or by future tooling.
+V1 does not define lifecycle commands such as `/approve-plan`, `/build`, `/ai-review`, or `/complete`. V2 should preserve the existing CLI setup commands and add universal lifecycle commands that can be executed in chat or by future tooling.
 
 ## Command Principles
 
@@ -70,7 +70,7 @@ Examples:
 /approve-requirements FEA-001
 /approve-plan FEA-001
 /build FEA-001
-/review FEA-001
+/ai-review FEA-001
 /test FEA-001
 /continue FEA-001
 /complete FEA-001
@@ -273,7 +273,7 @@ Refuse when:
 - Current state is before `plan_approved`.
 - Feature is `blocked` without resolution.
 
-### `/review`
+### `/ai-review`
 
 Purpose:
 
@@ -416,7 +416,7 @@ These commands are not required by the user prompt but should be included in V2 
 | `/approve-requirements` | `requirements_pending_review` | none | Human |
 | `/approve-plan` | `plan_pending_review` | requirements | Human |
 | `/build` | `plan_approved` or `building` | requirements and plan | Builder Agent |
-| `/review` | `building` or `reviewing` | requirements and plan | Reviewer Agent |
+| `/ai-review` | `building` or `reviewing` | requirements and plan | Reviewer Agent |
 | `/test` | `reviewing` or `testing` | requirements and plan | Tester Agent |
 | `/continue` | any non-terminal | state-dependent | State-dependent |
 | `/complete` | `ready_for_human_review` | requirements, plan, implementation | Human |
@@ -487,7 +487,7 @@ ai-delivery status FEA-001
 ai-delivery approve-requirements FEA-001
 ai-delivery approve-plan FEA-001
 ai-delivery build FEA-001
-ai-delivery review FEA-001
+ai-delivery ai-review FEA-001
 ai-delivery test FEA-001
 ai-delivery complete FEA-001
 ```

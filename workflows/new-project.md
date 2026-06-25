@@ -184,7 +184,7 @@ Follow:
 
 ```text
 /build
-/review
+/ai-review
 /test
 /complete
 ```

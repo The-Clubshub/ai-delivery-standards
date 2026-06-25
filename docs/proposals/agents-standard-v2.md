@@ -177,7 +177,7 @@ Canonical commands:
 - `/approve-requirements`
 - `/approve-plan`
 - `/build`
-- `/review`
+- `/ai-review`
 - `/test`
 - `/continue`
 - `/complete`

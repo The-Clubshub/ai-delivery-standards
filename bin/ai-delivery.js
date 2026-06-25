@@ -855,7 +855,7 @@ Use these commands in chat, CLI, issues, or PR comments:
 - \`/approve-requirements\`
 - \`/approve-plan\`
 - \`/build\`
-- \`/review\`
+- \`/ai-review\`
 - \`/test\`
 - \`/continue\`
 - \`/complete\`
@@ -1035,7 +1035,7 @@ Role behavior is defined in \`${config.standardsPath}/roles/\`.
 - \`/approve-requirements\`
 - \`/approve-plan\`
 - \`/build\`
-- \`/review\`
+- \`/ai-review\`
 - \`/test\`
 - \`/continue\`
 - \`/complete\`

@@ -11,7 +11,7 @@ These commands are the portable V2 lifecycle interface for chat, CLI, PR comment
 | `/approve-requirements` | Record human requirements approval when `approvalPolicy.requirements` is `human_required`. | `requirements_pending_review` | Human |
 | `/approve-plan` | Record human plan approval when `approvalPolicy.plan` is `human_required`. | `plan_pending_review` | Human |
 | `/build` | Start or continue gated implementation. | `plan_approved` or `building` | Builder Agent |
-| `/review` | Review implementation against approved artifacts. | `building` or `reviewing` | Reviewer Agent |
+| `/ai-review` | Review implementation against approved artifacts. | `building` or `reviewing` | Reviewer Agent |
 | `/test` | Validate implementation against the test plan. | `reviewing` or `testing` | Tester Agent |
 | `/continue` | Continue the next allowed lifecycle action. | any non-terminal | State-derived role |
 | `/complete` | Record implementation approval when required and mark complete. | `ready_for_human_review` | Human when `implementation` is `human_required`; Sync Agent when `not_required` |

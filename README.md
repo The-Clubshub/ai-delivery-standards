@@ -180,7 +180,7 @@ These commands are tool-agnostic. Use them in chat, CLI wrappers, issues, PR com
 | `/approve-requirements` | Human approval for requirements when the requirements gate is `human_required`. |
 | `/approve-plan` | Human approval for implementation plan and test strategy when the plan gate is `human_required`. |
 | `/build` | Builder Agent starts or continues approved implementation. |
-| `/review` | Reviewer Agent reviews implementation against approved artifacts. |
+| `/ai-review` | Reviewer Agent reviews implementation against approved artifacts. |
 | `/test` | Tester Agent records validation evidence. |
 | `/continue` | Continue the next allowed lifecycle action without skipping gates. |
 | `/complete` | Human implementation approval and final completion when the implementation gate is `human_required`. |
