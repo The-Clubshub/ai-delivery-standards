@@ -18,16 +18,23 @@
     "approvalPolicy": {
       "type": "object",
       "required": ["requirements", "plan", "implementation"],
+      "additionalProperties": false,
       "properties": {
-        "requirements": { "enum": ["human_required"] },
-        "plan": { "enum": ["human_required"] },
-        "implementation": { "enum": ["human_required"] }
+        "requirements": { "$ref": "#/$defs/approvalGatePolicy" },
+        "plan": { "$ref": "#/$defs/approvalGatePolicy" },
+        "implementation": { "$ref": "#/$defs/approvalGatePolicy" }
       }
     },
     "requiredFeatureArtifacts": {
       "type": "array",
       "items": { "type": "string" }
     }
+  },
+  "$defs": {
+    "approvalGatePolicy": {
+      "type": "string",
+      "enum": ["human_required", "not_required"],
+      "description": "human_required requires explicit human approval; not_required lets the responsible agent advance after required artifacts and evidence are ready."
+    }
   }
 }
-

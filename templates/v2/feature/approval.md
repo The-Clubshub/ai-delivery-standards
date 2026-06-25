@@ -10,6 +10,8 @@ updated: YYYY-MM-DD
 
 ## Approval Policy
 
+Policy is copied from `.ai/config.json` when the feature is created. `human_required` gates need explicit human approval. `not_required` gates can advance automatically after the required artifact or evidence exists.
+
 | Gate | Required | Status |
 | --- | --- | --- |
 | Requirements | Yes | Pending |
@@ -32,4 +34,3 @@ Status: Pending
 
 | Date | Gate | Action | Actor | Source | Notes |
 | --- | --- | --- | --- | --- | --- |
-

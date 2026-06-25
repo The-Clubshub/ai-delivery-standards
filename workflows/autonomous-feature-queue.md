@@ -4,6 +4,20 @@ Use this workflow when one request contains multiple independent features or a b
 
 This workflow does not replace specification-first delivery. It adds an execution mode for moving through several specified or specifiable features with disciplined validation, review, and stop conditions.
 
+For large builds where the human wants to approve requirements once and then let the agent run the rest of the loop, initialize or configure the project with:
+
+```json
+{
+  "approvalPolicy": {
+    "requirements": "human_required",
+    "plan": "not_required",
+    "implementation": "not_required"
+  }
+}
+```
+
+This is the same policy created by `ai-delivery init . --autonomous-after-requirements`.
+
 ## Outcome
 
 A feature batch moves through a queue automatically. Each feature is specified, implemented, validated, reviewed, fixed where useful, completed with evidence, and followed by the next queue item unless a defined blocker is reached.

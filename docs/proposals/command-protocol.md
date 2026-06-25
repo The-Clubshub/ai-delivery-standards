@@ -2,6 +2,8 @@
 
 Status: Proposal
 
+Current implementation note: approval gates are configurable through `.ai/config.json` `approvalPolicy`. This proposal's human-approval language describes the default `human_required` policy; a project may set any gate to `not_required` to allow automated advancement after required artifacts and evidence exist.
+
 This proposal defines a tool-agnostic command protocol for AI-assisted projects governed by `ai-delivery-standards` V2. Commands are the human and agent vocabulary for moving work through the lifecycle.
 
 ## Objective
@@ -501,4 +503,3 @@ The command protocol succeeds when:
 - Every state transition is traceable to a command or recorded action.
 - Approval commands cannot be executed by AI agents.
 - `/continue` never bypasses human approval gates.
-

@@ -6,7 +6,9 @@ This repository is an AI project operating system. Installed into a product repo
 
 ## Core Rule
 
-No implementation starts before human-approved requirements and a human-approved plan.
+By default, no implementation starts before human-approved requirements and a human-approved plan.
+
+Projects can opt out of manual approval per gate in `.ai/config.json` or at init time. Set a gate to `not_required` when the responsible agent may continue automatically after the required artifact or evidence is ready.
 
 Every non-trivial feature follows this lifecycle:
 
@@ -27,15 +29,27 @@ intake
 
 The feature may enter `blocked` from any non-terminal state.
 
-## Required Approval Gates
+## Configurable Approval Gates
 
-| Gate | Transition | Command | Actor |
+| Gate | Transition | Command When Human Required | Default Policy |
 | --- | --- | --- | --- |
-| Requirements | `requirements_pending_review -> requirements_approved` | `/approve-requirements` | Human |
-| Plan | `plan_pending_review -> plan_approved` | `/approve-plan` | Human |
-| Implementation | `ready_for_human_review -> complete` | `/complete` | Human |
+| Requirements | `requirements_pending_review -> requirements_approved` | `/approve-requirements` | `human_required` |
+| Plan | `plan_pending_review -> plan_approved` | `/approve-plan` | `human_required` |
+| Implementation | `ready_for_human_review -> complete` | `/complete` | `human_required` |
 
-AI agents may record approvals after humans give them. AI agents must never self-approve.
+AI agents may record approvals after humans give them. AI agents must never self-approve a `human_required` gate.
+
+Example fully automated policy:
+
+```json
+{
+  "approvalPolicy": {
+    "requirements": "not_required",
+    "plan": "not_required",
+    "implementation": "not_required"
+  }
+}
+```
 
 ## What This Repository Provides
 
@@ -66,6 +80,26 @@ Then initialize a product repository:
 cd /path/to/product-repo
 node /path/to/ai-delivery-standards/bin/ai-delivery.js init .
 ```
+
+Skip only manual requirements approval:
+
+```bash
+node /path/to/ai-delivery-standards/bin/ai-delivery.js init . --requirements-approval not_required
+```
+
+Approve requirements manually, then let the agent run planning, build, review, test, fixes, and completion without more manual approval gates:
+
+```bash
+node /path/to/ai-delivery-standards/bin/ai-delivery.js init . --autonomous-after-requirements
+```
+
+Allow the full lifecycle to run without manual approval gates:
+
+```bash
+node /path/to/ai-delivery-standards/bin/ai-delivery.js init . --approval-policy not_required
+```
+
+For large requests such as building a site from scratch, use `--autonomous-after-requirements` when you want one human checkpoint for scope and acceptance criteria, followed by an autonomous plan/build/review/test loop. The agent should still split work into bounded operations or queue items, record evidence, and stop for blockers such as unclear requirements, credentials, security decisions, destructive migrations, or failing validation it cannot resolve safely.
 
 Dry-run first if you want to preview the generated files:
 
@@ -143,13 +177,13 @@ These commands are tool-agnostic. Use them in chat, CLI wrappers, issues, PR com
 | --- | --- |
 | `/start-feature` | Create or begin a feature lifecycle entry. |
 | `/status` | Report active feature, state, approvals, blockers, and next allowed action. |
-| `/approve-requirements` | Human approval for requirements. |
-| `/approve-plan` | Human approval for implementation plan and test strategy. |
+| `/approve-requirements` | Human approval for requirements when the requirements gate is `human_required`. |
+| `/approve-plan` | Human approval for implementation plan and test strategy when the plan gate is `human_required`. |
 | `/build` | Builder Agent starts or continues approved implementation. |
 | `/review` | Reviewer Agent reviews implementation against approved artifacts. |
 | `/test` | Tester Agent records validation evidence. |
 | `/continue` | Continue the next allowed lifecycle action without skipping gates. |
-| `/complete` | Human implementation approval and final completion. |
+| `/complete` | Human implementation approval and final completion when the implementation gate is `human_required`. |
 
 If a command is not implemented as a CLI subcommand yet, agents must follow the semantics in `commands/command-protocol.md`.
 
@@ -159,7 +193,7 @@ If a command is not implemented as a CLI subcommand yet, agents must follow the 
 | --- | --- | --- |
 | Requirements Agent | `requirements.md`, early state, open questions | Edit production code or approve requirements |
 | Planner Agent | `plan.md`, `tests.md` draft | Edit production code or approve plan |
-| Builder Agent | Approved implementation operations | Build without requirements and plan approval |
+| Builder Agent | Approved implementation operations | Build before requirements and plan gates are satisfied |
 | Reviewer Agent | `review.md`, findings | Approve as human or add unplanned features |
 | Tester Agent | Validation evidence in `tests.md` | Change production behavior or complete the feature |
 | Sync Agent | State, registry, activity, handoff, memory | Approve gates or hide drift |
@@ -173,11 +207,11 @@ Each feature folder is durable state, not scratch notes:
 ```text
 docs/features/<ID>/
   state.json       # machine-readable lifecycle state
-  requirements.md # approved behavior target after requirements approval
-  plan.md         # approved implementation operations after plan approval
+  requirements.md # behavior target after requirements gate
+  plan.md         # implementation operations after plan gate
   tests.md        # validation strategy and evidence
   review.md       # review findings and resolution
-  approval.md     # human approval record
+  approval.md     # approval policy and gate evidence
   memory.md       # feature-scoped durable memory
   activity.md     # transition and activity log
   handoff.md      # next-role handoff notes

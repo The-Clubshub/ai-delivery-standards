@@ -43,6 +43,46 @@ const V2_FEATURE_ARTIFACTS = [
 const DEFAULT_AGENT_INSTRUCTION_PATH = "AGENTS.md";
 const DEFAULT_AI_PATH = ".ai";
 const DEFAULT_DOCS_PATH = "docs";
+const APPROVAL_GATES = ["requirements", "plan", "implementation"];
+const APPROVAL_GATE_LABELS = {
+  requirements: "Requirements",
+  plan: "Plan",
+  implementation: "Implementation"
+};
+const APPROVAL_GATE_TRANSITIONS = {
+  requirements: "requirements_pending_review -> requirements_approved",
+  plan: "plan_pending_review -> plan_approved",
+  implementation: "ready_for_human_review -> complete"
+};
+const APPROVAL_GATE_COMMANDS = {
+  requirements: "/approve-requirements",
+  plan: "/approve-plan",
+  implementation: "/complete"
+};
+const APPROVAL_GATE_REQUIRED_BEFORE = {
+  requirements: "Planning",
+  plan: "Building",
+  implementation: "Completion"
+};
+const DEFAULT_APPROVAL_POLICY = {
+  requirements: "human_required",
+  plan: "human_required",
+  implementation: "human_required"
+};
+const APPROVAL_POLICY_ALIASES = {
+  required: "human_required",
+  "human-required": "human_required",
+  human_required: "human_required",
+  human: "human_required",
+  manual: "human_required",
+  true: "human_required",
+  optional: "not_required",
+  automated: "not_required",
+  "not-required": "not_required",
+  not_required: "not_required",
+  skip: "not_required",
+  false: "not_required"
+};
 
 main(process.argv.slice(2));
 
@@ -94,8 +134,18 @@ function main(argv) {
 
 function initProject(argv) {
   const options = parseArgs(argv, {
-    boolean: ["force", "dry-run"],
-    string: ["standards-path", "docs-path", "ai-path", "feature-id", "feature-name"]
+    boolean: ["force", "dry-run", "autonomous-after-requirements"],
+    string: [
+      "standards-path",
+      "docs-path",
+      "ai-path",
+      "feature-id",
+      "feature-name",
+      "approval-policy",
+      "requirements-approval",
+      "plan-approval",
+      "implementation-approval"
+    ]
   });
 
   const target = path.resolve(options.positionals[0] || ".");
@@ -107,6 +157,7 @@ function initProject(argv) {
   const featureId = options["feature-id"] || "FEA-001";
   const featureName = options["feature-name"] || "Initial Product Skeleton";
   const dryRun = Boolean(options["dry-run"]);
+  const approvalPolicy = resolveApprovalPolicyOptions(existingConfig.approvalPolicy, options);
 
   ensureDirectory(target, dryRun);
   syncStandards([
@@ -118,7 +169,7 @@ function initProject(argv) {
   ]);
 
   const configPath = path.join(target, ".ai-delivery.json");
-  const config = buildProjectConfig({ ...existingConfig, standardsPath, docsPath, aiPath, agentInstructionPath });
+  const config = buildProjectConfig({ ...existingConfig, standardsPath, docsPath, aiPath, agentInstructionPath, approvalPolicy });
   writeText(configPath, `${JSON.stringify(config, null, 2)}\n`, { dryRun, overwrite: options.force });
 
   ensureAiOperatingSystem(target, config, { dryRun, overwrite: options.force });
@@ -139,7 +190,7 @@ function initProject(argv) {
     config.featurePath,
     ...(options.force ? ["--force"] : []),
     ...(dryRun ? ["--dry-run"] : [])
-  ]);
+  ], config);
 
   logDone(`Initialized AI delivery standards in ${target}`);
 }
@@ -183,7 +234,7 @@ function syncStandards(argv) {
   logDone(`${dryRun ? "Planned sync" : "Synced"} standards to ${destination}`);
 }
 
-function createFeature(argv) {
+function createFeature(argv, configOverride = null) {
   const options = parseArgs(argv, {
     boolean: ["force", "dry-run"],
     string: ["target", "docs-path", "feature-root"]
@@ -195,7 +246,7 @@ function createFeature(argv) {
   }
 
   const target = path.resolve(options.target || ".");
-  const config = readConfig(target);
+  const config = configOverride || readConfig(target);
   const docsPath = normalizeDocsPath(options["docs-path"] || config.docsPath, config.aiPath);
   const featureConfig = buildProjectConfig({
     ...config,
@@ -218,12 +269,12 @@ function createFeature(argv) {
   ensureDirectory(path.join(featureFolder, "artifacts", "evals"), dryRun);
   ensureDirectory(path.join(featureFolder, "artifacts", "exports"), dryRun);
 
-  writeJson(path.join(featureFolder, "state.json"), featureStateTemplate(featureId, featureName), { dryRun, overwrite: options.force });
+  writeJson(path.join(featureFolder, "state.json"), featureStateTemplate(featureId, featureName, featureConfig.approvalPolicy), { dryRun, overwrite: options.force });
   writeText(path.join(featureFolder, "requirements.md"), featureRequirementsTemplate(featureId, featureName), { dryRun, overwrite: options.force });
-  writeText(path.join(featureFolder, "plan.md"), featurePlanTemplate(featureId, featureName), { dryRun, overwrite: options.force });
+  writeText(path.join(featureFolder, "plan.md"), featurePlanTemplate(featureId, featureName, featureConfig.approvalPolicy), { dryRun, overwrite: options.force });
   writeText(path.join(featureFolder, "tests.md"), featureTestsTemplate(featureId, featureName), { dryRun, overwrite: options.force });
   writeText(path.join(featureFolder, "review.md"), featureReviewTemplate(featureId, featureName), { dryRun, overwrite: options.force });
-  writeText(path.join(featureFolder, "approval.md"), featureApprovalTemplate(featureId, featureName), { dryRun, overwrite: options.force });
+  writeText(path.join(featureFolder, "approval.md"), featureApprovalTemplate(featureId, featureName, featureConfig.approvalPolicy), { dryRun, overwrite: options.force });
   writeText(path.join(featureFolder, "memory.md"), featureMemoryTemplate(featureId, featureName), { dryRun, overwrite: options.force });
   writeText(path.join(featureFolder, "activity.md"), featureActivityTemplate(featureId, featureName), { dryRun, overwrite: options.force });
   writeText(path.join(featureFolder, "handoff.md"), featureHandoffTemplate(featureId, featureName), { dryRun, overwrite: options.force });
@@ -406,6 +457,7 @@ function buildProjectConfig(overrides = {}) {
   const docsPath = normalizeDocsPath(overrides.docsPath, aiPath);
   const featurePath = normalizeFeaturePath(overrides.featurePath, docsPath, aiPath);
   const legacyFeaturePath = normalizeDocsChildPath(overrides.legacyFeaturePath, docsPath, aiPath, "features");
+  const approvalPolicy = normalizeApprovalPolicy(overrides.approvalPolicy);
 
   return {
     operatingSystemVersion: "v2",
@@ -420,14 +472,60 @@ function buildProjectConfig(overrides = {}) {
       ? overrides.requiredFeatureArtifacts
       : V2_FEATURE_ARTIFACTS,
     legacyFeatureArtifacts: LEGACY_FEATURE_TEMPLATE_FILES,
-    approvalPolicy: overrides.approvalPolicy || {
-      requirements: "human_required",
-      plan: "human_required",
-      implementation: "human_required"
-    },
+    approvalPolicy,
     commandProtocol: overrides.commandProtocol || "universal-command-protocol-v2",
     standardsVersion: overrides.standardsVersion || packageJson.version || "local"
   };
+}
+
+function resolveApprovalPolicyOptions(basePolicy, options) {
+  const optionPolicy = {};
+
+  if (options["approval-policy"]) {
+    const value = normalizeApprovalPolicyValue(options["approval-policy"], "--approval-policy");
+    for (const gate of APPROVAL_GATES) {
+      optionPolicy[gate] = value;
+    }
+  }
+
+  if (options["autonomous-after-requirements"]) {
+    optionPolicy.requirements = "human_required";
+    optionPolicy.plan = "not_required";
+    optionPolicy.implementation = "not_required";
+  }
+
+  const gateOptions = {
+    requirements: "requirements-approval",
+    plan: "plan-approval",
+    implementation: "implementation-approval"
+  };
+
+  for (const [gate, optionName] of Object.entries(gateOptions)) {
+    if (options[optionName]) {
+      optionPolicy[gate] = normalizeApprovalPolicyValue(options[optionName], `--${optionName}`);
+    }
+  }
+
+  return normalizeApprovalPolicy({ ...normalizeApprovalPolicy(basePolicy), ...optionPolicy });
+}
+
+function normalizeApprovalPolicy(policy = {}) {
+  const normalized = { ...DEFAULT_APPROVAL_POLICY };
+  for (const gate of APPROVAL_GATES) {
+    if (policy[gate] !== undefined) {
+      normalized[gate] = normalizeApprovalPolicyValue(policy[gate], `approvalPolicy.${gate}`);
+    }
+  }
+  return normalized;
+}
+
+function normalizeApprovalPolicyValue(value, source) {
+  const key = String(value).trim().toLowerCase();
+  const normalized = APPROVAL_POLICY_ALIASES[key];
+  if (!normalized) {
+    fail(`${source} must be one of: human_required, not_required`);
+  }
+  return normalized;
 }
 
 function hydrateTemplate(content, values) {
@@ -476,7 +574,8 @@ function projectStateTemplate() {
   };
 }
 
-function featureStateTemplate(featureId, featureName) {
+function featureStateTemplate(featureId, featureName, approvalPolicy = DEFAULT_APPROVAL_POLICY) {
+  const policy = normalizeApprovalPolicy(approvalPolicy);
   return {
     artifact: "feature-state",
     operatingSystemVersion: "v2",
@@ -498,11 +597,7 @@ function featureStateTemplate(featureId, featureName) {
       activity: "activity.md",
       handoff: "handoff.md"
     },
-    approvals: {
-      requirements: { status: "pending" },
-      plan: { status: "pending" },
-      implementation: { status: "pending" }
-    },
+    approvals: initialApprovals(policy),
     lastTransition: {
       from: "intake",
       to: "requirements_draft",
@@ -516,6 +611,53 @@ function featureStateTemplate(featureId, featureName) {
       limit: 2
     }
   };
+}
+
+function initialApprovals(approvalPolicy) {
+  const approvals = {};
+  for (const gate of APPROVAL_GATES) {
+    approvals[gate] = approvalPolicy[gate] === "not_required"
+      ? { status: "not_required", source: ".ai/config.json approvalPolicy" }
+      : { status: "pending" };
+  }
+  return approvals;
+}
+
+function isGateHumanRequired(approvalPolicy, gate) {
+  return normalizeApprovalPolicy(approvalPolicy)[gate] === "human_required";
+}
+
+function approvalRequiredLabel(approvalPolicy, gate) {
+  return isGateHumanRequired(approvalPolicy, gate) ? "Yes" : "No";
+}
+
+function approvalStatusLabel(approvalPolicy, gate) {
+  return isGateHumanRequired(approvalPolicy, gate) ? "Pending" : "Not required";
+}
+
+function approvalPolicyRows(approvalPolicy) {
+  const policy = normalizeApprovalPolicy(approvalPolicy);
+  return APPROVAL_GATES
+    .map((gate) => `| ${APPROVAL_GATE_LABELS[gate]} | ${approvalRequiredLabel(policy, gate)} | ${approvalStatusLabel(policy, gate)} |`)
+    .join("\n");
+}
+
+function approvalPolicyTransitionRows(approvalPolicy) {
+  const policy = normalizeApprovalPolicy(approvalPolicy);
+  return APPROVAL_GATES
+    .map((gate) => `| ${APPROVAL_GATE_LABELS[gate]} | \`${policy[gate]}\` | \`${APPROVAL_GATE_TRANSITIONS[gate]}\` | \`${APPROVAL_GATE_COMMANDS[gate]}\` |`)
+    .join("\n");
+}
+
+function approvalPolicyRequiredBeforeRows(approvalPolicy) {
+  const policy = normalizeApprovalPolicy(approvalPolicy);
+  return APPROVAL_GATES
+    .map((gate) => `| ${APPROVAL_GATE_LABELS[gate]} | \`${policy[gate]}\` | \`${APPROVAL_GATE_COMMANDS[gate]}\` | ${APPROVAL_GATE_REQUIRED_BEFORE[gate]} |`)
+    .join("\n");
+}
+
+function approvalPolicyJson(approvalPolicy) {
+  return JSON.stringify(normalizeApprovalPolicy(approvalPolicy), null, 2);
 }
 
 function updateFeatureRegistry(target, config, featureId, featureName, options = {}) {
@@ -577,13 +719,13 @@ The universal lifecycle is:
 \`\`\`text
 Idea
 -> Requirements Agent
--> Human Approval
+-> Requirements Gate
 -> Planner Agent
--> Human Approval
+-> Plan Gate
 -> Builder Agent
 -> Reviewer Agent
 -> Tester Agent
--> Human Review
+-> Implementation Gate
 -> Complete
 \`\`\`
 
@@ -686,19 +828,23 @@ Use:
 node ${config.standardsPath}/bin/ai-delivery.js feature FEA-002 "Feature Name"
 \`\`\`
 
-## Approval Gates
+## Approval Policy
 
-Human approval is required for:
+Gate policy is read from \`${config.aiPath}/config.json\`:
 
-| Gate | Transition | Command |
-| --- | --- | --- |
-| Requirements | \`requirements_pending_review -> requirements_approved\` | \`/approve-requirements\` |
-| Plan | \`plan_pending_review -> plan_approved\` | \`/approve-plan\` |
-| Implementation | \`ready_for_human_review -> complete\` | \`/complete\` |
+\`\`\`json
+${approvalPolicyJson(config.approvalPolicy)}
+\`\`\`
 
-Approval evidence must be recorded in \`${config.featurePath}/<ID>/approval.md\` and mirrored in \`${config.featurePath}/<ID>/state.json\`.
+| Gate | Policy | Transition | Command when human approval is required |
+| --- | --- | --- | --- |
+${approvalPolicyTransitionRows(config.approvalPolicy)}
 
-Agents may record human approval after it is given. Agents must never self-approve or infer approval from silence.
+\`human_required\` means an explicit human approval must be recorded before the transition. \`not_required\` means the responsible agent may advance the gate after required artifacts or evidence are ready, recording \`not_required\` in \`${config.featurePath}/<ID>/approval.md\` and \`${config.featurePath}/<ID>/state.json\`.
+
+Gate evidence must be recorded in \`${config.featurePath}/<ID>/approval.md\` and mirrored in \`${config.featurePath}/<ID>/state.json\`.
+
+Agents may record human approval after it is given. Agents must never self-approve a \`human_required\` gate or infer approval from silence.
 
 ## Universal Commands
 
@@ -720,11 +866,11 @@ If no CLI subcommand exists for a command, follow the command semantics in \`${c
 
 Agents must not:
 
-- Build before requirements approval exists.
-- Build before plan approval exists.
-- Plan before requirements approval exists.
-- Complete a feature before human implementation approval exists.
-- Self-approve any gate.
+- Build before the requirements gate is satisfied.
+- Build before the plan gate is satisfied.
+- Plan before the requirements gate is satisfied.
+- Complete a feature before the implementation gate is satisfied.
+- Self-approve any \`human_required\` gate.
 - Skip Reviewer Agent or Tester Agent stages.
 - Modify production code while acting as Requirements Agent or Planner Agent.
 - Modify production behavior while acting as Reviewer Agent or Tester Agent unless the lifecycle returns to \`building\`.
@@ -741,7 +887,7 @@ If implementation reality contradicts approved requirements or plan:
    - Requirements change: \`requirements_draft\`
    - Plan change only: \`plan_draft\`
    - Implementation defect: \`building\`
-4. Obtain required approval again before continuing.
+4. Satisfy the configured gate again before continuing.
 
 ## Runtime Command Policy
 
@@ -752,7 +898,7 @@ Use the package manager and validation commands declared by this repository. If 
 The agent must refuse and explain the next allowed action when:
 
 - The requested action is not allowed in the current state.
-- Required approval is missing, stale, revoked, or changes requested.
+- Required gate evidence is missing, stale, revoked, or changes requested.
 - Acceptance criteria are missing or contradictory.
 - Authorization rules are unclear.
 - Data ownership, tenant boundary, or privacy impact is unclear.
@@ -783,7 +929,7 @@ Before implementation:
 2. Read .ai/config.json, .ai/registry.json, and .ai/state.json.
 3. Read the active feature state and approval files.
 4. Determine the current role from the state machine.
-5. Do not edit production code until requirements and plan approvals exist.
+5. Do not edit production code until requirements and plan gates are satisfied.
 
 During implementation:
 - Work only from approved plan operations.
@@ -794,7 +940,7 @@ During implementation:
 Before completion:
 - Run validation.
 - Complete review and testing stages.
-- Record human implementation approval before marking complete.
+- Record implementation gate evidence before marking complete.
 \`\`\`
 `;
 }
@@ -857,21 +1003,19 @@ ${config.featurePath}/<ID>/
 
 ## Required Rule
 
-No implementation before human-approved requirements and human-approved plan.
+No implementation before the requirements and plan gates are satisfied according to \`${config.aiPath}/config.json\`.
 
 Agents must inspect \`${config.aiPath}\`, determine current state, act only in the allowed role, update lifecycle artifacts, validate changes, and sync state before handoff.
 
-## Approval Gates
+## Approval Policy
 
-Human approval is required for:
+Gate policy:
 
-| Gate | Command | Required Before |
-| --- | --- |
-| Requirements | \`/approve-requirements\` | Planning |
-| Plan | \`/approve-plan\` | Building |
-| Implementation | \`/complete\` | Completion |
+| Gate | Policy | Command when human approval is required | Required Before |
+| --- | --- | --- | --- |
+${approvalPolicyRequiredBeforeRows(config.approvalPolicy)}
 
-Approval evidence lives in \`${config.featurePath}/<ID>/approval.md\` and is mirrored in \`state.json\`.
+\`human_required\` gates need explicit human approval. \`not_required\` gates can advance automatically after the required artifact or evidence exists. Gate evidence lives in \`${config.featurePath}/<ID>/approval.md\` and is mirrored in \`state.json\`.
 
 ## Standard Roles
 
@@ -908,10 +1052,10 @@ ai-delivery doctor .
 
 Before a feature can be complete:
 
-- Requirements and plan approvals exist.
+- Requirements and plan gates are satisfied.
 - Implementation was reviewed.
 - Tests and validation evidence are recorded.
-- Human implementation approval exists.
+- Implementation gate is satisfied.
 - Feature state is \`complete\`.
 `;
 }
@@ -1011,7 +1155,7 @@ Use this file when a request contains multiple independent features.
 function roleOverridesTemplate() {
   return `# Role Overrides
 
-Project-specific role rules may be stricter than the V2 standard, but they must not bypass approval gates.
+Project-specific role rules may be stricter than the V2 standard, but they must not bypass configured approval-policy gates.
 
 ## Requirements Agent
 
@@ -1139,7 +1283,9 @@ Use this section for AI-enabled features.
 `;
 }
 
-function featurePlanTemplate(featureId, featureName) {
+function featurePlanTemplate(featureId, featureName, approvalPolicy = DEFAULT_APPROVAL_POLICY) {
+  const policy = normalizeApprovalPolicy(approvalPolicy);
+  const requirementsGateStatus = approvalStatusLabel(policy, "requirements");
   return `# Plan: ${featureName}
 
 \`\`\`yaml
@@ -1155,8 +1301,8 @@ updated: ${today()}
 
 ## Preconditions
 
-- [ ] Requirements are approved in \`approval.md\`.
-- [ ] Requirements approval is mirrored in \`state.json\`.
+- [ ] Requirements gate is satisfied in \`approval.md\` (${requirementsGateStatus}).
+- [ ] Requirements gate status is mirrored in \`state.json\`.
 - [ ] Relevant repository context has been inspected.
 - [ ] Relevant standards have been identified.
 
@@ -1209,7 +1355,7 @@ Rollback:
 
 - [ ] Operations are ordered and bounded.
 - [ ] Acceptance criteria map to tests.
-- [ ] Plan is ready for human approval.
+- [ ] Plan is ready for the configured approval policy.
 `;
 }
 
@@ -1320,7 +1466,8 @@ updated: ${today()}
 `;
 }
 
-function featureApprovalTemplate(featureId, featureName) {
+function featureApprovalTemplate(featureId, featureName, approvalPolicy = DEFAULT_APPROVAL_POLICY) {
+  const policy = normalizeApprovalPolicy(approvalPolicy);
   return `# Approval: ${featureName}
 
 \`\`\`yaml
@@ -1335,13 +1482,11 @@ updated: ${today()}
 
 | Gate | Required | Status |
 | --- | --- | --- |
-| Requirements | Yes | Pending |
-| Plan | Yes | Pending |
-| Implementation | Yes | Pending |
+${approvalPolicyRows(policy)}
 
 ## Requirements Approval
 
-Status: Pending
+Status: ${approvalStatusLabel(policy, "requirements")}
 Approved by:
 Approved at:
 Source:
@@ -1351,7 +1496,7 @@ Notes:
 
 ## Plan Approval
 
-Status: Pending
+Status: ${approvalStatusLabel(policy, "plan")}
 Approved by:
 Approved at:
 Source:
@@ -1361,7 +1506,7 @@ Notes:
 
 ## Implementation Approval
 
-Status: Pending
+Status: ${approvalStatusLabel(policy, "implementation")}
 Approved by:
 Approved at:
 Source:
@@ -1651,6 +1796,14 @@ Options:
   --feature-root <path>    V2 feature lifecycle root. Default: docs/features
   --feature-id <id>        Initial feature ID for init. Default: FEA-001
   --feature-name <name>    Initial feature name for init. Default: Initial Product Skeleton
+  --approval-policy <mode> Set all gates to human_required or not_required.
+  --autonomous-after-requirements
+                           Require human requirements approval, then automate plan and implementation gates.
+  --requirements-approval <mode>
+                           Set requirements gate policy.
+  --plan-approval <mode>   Set plan gate policy.
+  --implementation-approval <mode>
+                           Set implementation gate policy.
   --target <path>          Target repo for feature command. Default: .
   --force                  Overwrite generated product docs or feature artifacts.
   --dry-run                Print planned writes without changing files.
@@ -1660,6 +1813,9 @@ Examples:
   ${cli} --dry-run
   ${cli} init ../my-product --feature-name "Initial Product Skeleton"
   ${cli} init ../my-product --ai-path .ai
+  ${cli} init ../my-product --requirements-approval not_required
+  ${cli} init ../my-product --autonomous-after-requirements
+  ${cli} init ../my-product --approval-policy not_required
   ${cli} feature FEA-042 "Scoped Help Assistant" --target ../my-product
   ${cli} sync ../my-product
   ${cli} doctor ../my-product

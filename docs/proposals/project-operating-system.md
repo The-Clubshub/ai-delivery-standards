@@ -2,6 +2,8 @@
 
 Status: Proposal
 
+Current implementation note: approval gates are configurable through `.ai/config.json` `approvalPolicy`. This proposal's human-approval language describes the default `human_required` policy; a project may set any gate to `not_required` to allow automated advancement after required artifacts and evidence exist.
+
 This proposal designs V2 of `ai-delivery-standards` as a universal operating system for AI-assisted software projects. The goal is not to add more documentation. The goal is to define a portable control plane that every AI agent can read before it acts.
 
 ## Objective
@@ -362,4 +364,3 @@ V2 succeeds when:
 - A Reviewer Agent and Tester Agent can operate from the same artifacts regardless of AI provider.
 - Human approvals are durable, inspectable, and tied to state transitions.
 - Existing V1 projects can adopt V2 gradually.
-

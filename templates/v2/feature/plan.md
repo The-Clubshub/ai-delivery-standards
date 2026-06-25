@@ -13,6 +13,8 @@ updated: YYYY-MM-DD
 
 ## Preconditions
 
+- [ ] Requirements gate is satisfied according to `.ai/config.json` approval policy.
+- [ ] Requirements gate status is mirrored in `approval.md` and `state.json`.
 ## Implementation Rules
 
 ## Operation Plan
@@ -29,4 +31,3 @@ updated: YYYY-MM-DD
 ## Rollout And Rollback
 
 ## Completion Checklist
-

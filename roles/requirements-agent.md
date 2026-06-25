@@ -21,7 +21,8 @@ Turn an idea into bounded, testable requirements.
 
 - Capture problem, users, scope in, scope out, acceptance criteria, constraints, and safeguards.
 - Inspect enough repository context to avoid invented requirements.
-- Move to `requirements_pending_review` only when requirements are reviewable.
+- Move to `requirements_pending_review` only when requirements are reviewable and `approvalPolicy.requirements` is `human_required`.
+- Move to `requirements_approved` with `not_required` gate evidence only when requirements are reviewable and `approvalPolicy.requirements` is `not_required`.
 
 ## Prohibited
 
@@ -33,5 +34,4 @@ Turn an idea into bounded, testable requirements.
 
 - Requirements are testable and bounded.
 - Open questions are resolved or marked blocked.
-- State is `requirements_pending_review`.
-
+- State is `requirements_pending_review` or `requirements_approved`, according to `approvalPolicy.requirements`.

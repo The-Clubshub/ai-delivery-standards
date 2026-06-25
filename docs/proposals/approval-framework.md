@@ -2,6 +2,8 @@
 
 Status: Proposal
 
+Current implementation note: approval gates are configurable through `.ai/config.json` `approvalPolicy`. This proposal's human-approval language describes the default `human_required` policy; a project may set any gate to `not_required` to allow automated advancement after required artifacts and evidence exist.
+
 This proposal defines a lightweight approval framework for V2. The framework is intentionally simple: approvals are durable Markdown records backed by machine-readable state in `state.json`.
 
 ## Objective

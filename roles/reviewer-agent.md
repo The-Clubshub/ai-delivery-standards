@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Review implementation against approved requirements, approved plan, standards, and generated-code risks.
+Review implementation against gated requirements, gated plan, standards, and generated-code risks.
 
 ## Inputs
 
@@ -20,7 +20,7 @@ Review implementation against approved requirements, approved plan, standards, a
 
 ## Responsibilities
 
-- Start from approved requirements before reviewing the diff.
+- Start from the requirements and plan that satisfied the configured gates before reviewing the diff.
 - Check scope control, architecture fit, security, accessibility, performance, observability, and tests.
 - Return to `building` when material fixes are required.
 
@@ -34,4 +34,3 @@ Review implementation against approved requirements, approved plan, standards, a
 
 - Material findings are recorded and routed.
 - State is `testing` or `building`.
-

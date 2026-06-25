@@ -2,6 +2,8 @@
 
 Status: Proposal
 
+Current implementation note: approval gates are configurable through `.ai/config.json` `approvalPolicy`. This proposal's human-approval language describes the default `human_required` policy; a project may set any gate to `not_required` to allow automated advancement after required artifacts and evidence exist.
+
 This proposal redesigns `AGENTS.md` as the primary behavioral contract for all AI agents operating in a project. It must be installable into any software repository and understandable by tool-specific agents, general chat assistants, coding agents, and future AI systems.
 
 ## Objective

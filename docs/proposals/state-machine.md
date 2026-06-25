@@ -2,6 +2,8 @@
 
 Status: Proposal
 
+Current implementation note: approval gates are configurable through `.ai/config.json` `approvalPolicy`. This proposal's human-approval language describes the default `human_required` policy; a project may set any gate to `not_required` to allow automated advancement after required artifacts and evidence exist.
+
 This proposal defines the universal feature lifecycle state machine for V2. It is the authoritative contract for what an AI agent may do at any point in a feature's life.
 
 ## Objective
@@ -265,4 +267,3 @@ The state machine is ready for implementation when:
 - Every role has allowed states and prohibited behavior.
 - Every approval gate has durable evidence requirements.
 - Legacy V1 artifacts can be mapped into a valid state without losing information.
-

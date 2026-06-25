@@ -8,7 +8,7 @@ If the request contains multiple independent features, use `.ai/queues/active.md
 
 ## Outcome
 
-A feature moves from intent to human-approved requirements, human-approved plan, implementation, AI review, testing, human review, and completion with synchronized state.
+A feature moves from intent to requirements gate, plan gate, implementation, AI review, testing, implementation gate, and completion with synchronized state. By default each approval gate is `human_required`, but projects may set gates to `not_required` in `.ai/config.json`.
 
 ## Required Artifacts
 
@@ -81,17 +81,19 @@ Do not plan implementation or edit production code in this state.
 
 Move to `requirements_pending_review` when requirements are testable and bounded.
 
-Do not continue to planning until a human approves requirements with:
+If `approvalPolicy.requirements` is `human_required`, do not continue to planning until a human approves requirements with:
 
 ```text
 /approve-requirements
 ```
 
-Approval must be recorded in `approval.md` and mirrored in `state.json`.
+If `approvalPolicy.requirements` is `not_required`, record `not_required` in `approval.md` and `state.json`, then move to `requirements_approved`.
+
+Gate evidence must be recorded in `approval.md` and mirrored in `state.json`.
 
 ### 4. Plan Draft
 
-After requirements approval, the Planner Agent fills:
+After the requirements gate is satisfied, the Planner Agent fills:
 
 - `plan.md`
 - `tests.md`
@@ -102,13 +104,15 @@ The plan must include ordered operations, expected files or modules where known,
 
 Move to `plan_pending_review` when the implementation plan and test plan are ready.
 
-Do not build until a human approves the plan with:
+If `approvalPolicy.plan` is `human_required`, do not build until a human approves the plan with:
 
 ```text
 /approve-plan
 ```
 
-Approval must be recorded in `approval.md` and mirrored in `state.json`.
+If `approvalPolicy.plan` is `not_required`, record `not_required` in `approval.md` and `state.json`, then move to `plan_approved`.
+
+Gate evidence must be recorded in `approval.md` and mirrored in `state.json`.
 
 ### 6. Build
 
@@ -116,18 +120,18 @@ The Builder Agent may build only when state is `plan_approved`.
 
 Rules:
 
-- Implement only approved operations.
+- Implement only gated operations.
 - Work operation by operation.
 - Keep changes narrow.
 - Add or update tests with behavior changes.
-- Return to `requirements_draft` or `plan_draft` if approved artifacts no longer match reality.
+- Return to `requirements_draft` or `plan_draft` if gated artifacts no longer match reality.
 
 ### 7. Review
 
 The Reviewer Agent reviews implementation against:
 
-- Approved requirements.
-- Approved plan.
+- Gated requirements.
+- Gated plan.
 - Tests.
 - Security, accessibility, performance, observability, API, frontend, backend, and engineering standards.
 - Generated-code risks.
@@ -150,34 +154,36 @@ Run the smallest meaningful checks first and broaden based on risk:
 
 Failed validation returns to `building` or `reviewing`.
 
-### 9. Human Review
+### 9. Implementation Gate
 
 When review and testing are complete, move to `ready_for_human_review`.
 
-The Sync Agent prepares the human review summary and ensures:
+The Sync Agent prepares the completion summary and ensures:
 
 - `state.json` is current.
-- `approval.md` shows requirements and plan approvals.
+- `approval.md` shows requirements and plan gate evidence.
 - `review.md` records findings.
 - `tests.md` records validation evidence.
 - `handoff.md` names the next allowed command.
 
 ### 10. Complete
 
-Only a human may complete the feature:
+If `approvalPolicy.implementation` is `human_required`, only a human may complete the feature:
 
 ```text
 /complete
 ```
 
-This records implementation approval in `approval.md`, mirrors it in `state.json`, and moves the feature to `complete`.
+If `approvalPolicy.implementation` is `not_required`, the Sync Agent may record `not_required` in `approval.md` and `state.json`, then move the feature to `complete`.
+
+Completion records implementation gate evidence in `approval.md`, mirrors it in `state.json`, and moves the feature to `complete`.
 
 ## Quality Gates
 
 - [ ] V2 feature folder exists.
-- [ ] Requirements approval exists before planning.
-- [ ] Plan approval exists before building.
+- [ ] Requirements gate is satisfied before planning.
+- [ ] Plan gate is satisfied before building.
 - [ ] Review stage completed.
 - [ ] Testing stage completed or gaps accepted.
-- [ ] Human implementation approval exists before `complete`.
+- [ ] Implementation gate is satisfied before `complete`.
 - [ ] Specs match final implementation.

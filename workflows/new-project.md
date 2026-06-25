@@ -39,6 +39,30 @@ ai-delivery init . \
   --feature-name "Initial Product Skeleton"
 ```
 
+To skip manual approval for every gate:
+
+```bash
+ai-delivery init . \
+  --feature-id FEA-001 \
+  --feature-name "Initial Product Skeleton" \
+  --approval-policy not_required
+```
+
+To approve requirements once, then let planning, build, review, test, fixes, and completion run without more manual approval gates:
+
+```bash
+ai-delivery init . \
+  --feature-id FEA-001 \
+  --feature-name "Initial Product Skeleton" \
+  --autonomous-after-requirements
+```
+
+To skip only requirements approval:
+
+```bash
+ai-delivery init . --requirements-approval not_required
+```
+
 For a product in another directory:
 
 ```bash
@@ -134,21 +158,25 @@ CLI shortcut:
 ai-delivery feature FEA-001 "Initial Product Skeleton"
 ```
 
-### 8. Approve Requirements
+### 8. Satisfy Requirements Gate
 
-Do not plan until requirements are approved:
+Do not plan until the requirements gate is satisfied. If `approvalPolicy.requirements` is `human_required`, approve with:
 
 ```text
 /approve-requirements
 ```
 
-### 9. Approve Plan
+If `approvalPolicy.requirements` is `not_required`, record `not_required` in `approval.md` and `state.json` and continue.
 
-Do not scaffold application code until the plan is approved:
+### 9. Satisfy Plan Gate
+
+Do not scaffold application code until the plan gate is satisfied. If `approvalPolicy.plan` is `human_required`, approve with:
 
 ```text
 /approve-plan
 ```
+
+If `approvalPolicy.plan` is `not_required`, record `not_required` in `approval.md` and `state.json` and continue.
 
 ### 10. Build, Review, Test, Complete
 
@@ -161,15 +189,15 @@ Follow:
 /complete
 ```
 
-`/complete` requires human implementation approval.
+`/complete` requires human implementation approval when `approvalPolicy.implementation` is `human_required`. If it is `not_required`, the Sync Agent may complete after review and test evidence are recorded.
 
 ## Quality Gates
 
 - [ ] `.ai/config.json` exists.
 - [ ] `.ai/registry.json` identifies the active feature.
 - [ ] `docs/features/FEA-001/state.json` exists.
-- [ ] Requirements approval exists before planning.
-- [ ] Plan approval exists before building.
+- [ ] Requirements gate is satisfied before planning.
+- [ ] Plan gate is satisfied before building.
 - [ ] CI or validation commands are documented.
 - [ ] Security and accessibility baselines are defined.
 - [ ] Final specs match the created project skeleton.

@@ -2,6 +2,8 @@
 
 Status: Proposal
 
+Current implementation note: approval gates are configurable through `.ai/config.json` `approvalPolicy`. This proposal's human-approval language describes the default `human_required` policy; a project may set any gate to `not_required` to allow automated advancement after required artifacts and evidence exist.
+
 This proposal defines the universal AI agent roles used by V2. Roles are tool-agnostic. A role describes what the agent is allowed to do, what artifacts it owns, and when it must stop.
 
 ## Objective
@@ -353,4 +355,3 @@ The role model succeeds when:
 - A Reviewer Agent sends implementation defects back to `building`.
 - A Tester Agent sends failed validation back to `building` or `reviewing`.
 - A Sync Agent can make the repository understandable to the next agent without relying on chat history.
-

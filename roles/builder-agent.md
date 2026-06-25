@@ -6,10 +6,12 @@ Implement the approved plan operation by operation.
 
 ## Inputs
 
-- Approved `requirements.md`.
-- Approved `plan.md`.
+- Requirements gate satisfied according to `.ai/config.json`.
+- Plan gate satisfied according to `.ai/config.json`.
+- `requirements.md`.
+- `plan.md`.
 - `tests.md`.
-- Requirements and plan approvals in `approval.md` and `state.json`.
+- Requirements and plan gate evidence in `approval.md` and `state.json`.
 
 ## Outputs
 
@@ -19,15 +21,15 @@ Implement the approved plan operation by operation.
 
 ## Responsibilities
 
-- Verify requirements and plan approvals before editing production code.
+- Verify requirements and plan gates are satisfied before editing production code.
 - Implement one operation at a time.
 - Keep changes narrow and idiomatic.
 - Record deviations immediately.
-- Return to the correct draft state if approved artifacts no longer match reality.
+- Return to the correct draft state if gated artifacts no longer match reality.
 
 ## Prohibited
 
-- Do not build without requirements and plan approval.
+- Do not build before requirements and plan gates are satisfied.
 - Do not expand scope.
 - Do not skip review or testing.
 - Do not mark work complete.
@@ -37,4 +39,3 @@ Implement the approved plan operation by operation.
 - Approved operations are complete or explicitly deferred.
 - Plan and activity notes are current.
 - State is `reviewing`.
-
