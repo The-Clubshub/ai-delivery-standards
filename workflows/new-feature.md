@@ -2,7 +2,7 @@
 
 Use this workflow for new user-facing, API, backend, infrastructure, or AI-enabled features under the V2 operating system.
 
-If the feature already exists in the application and you are changing or fixing it for the first time under this standards framework, use `workflows/existing-feature-change.md` and migrate enough lifecycle state to `docs/features/<ID>/` before implementation.
+If the feature already exists in the application and you are changing or fixing it for the first time under this standards framework, use `workflows/existing-feature-change.md` and migrate enough lifecycle state to `docs/features/<ID>-<slug>/` before implementation.
 
 If the request contains multiple independent features, use `.ai/queues/active.md` and work one feature lifecycle entry at a time.
 
@@ -15,7 +15,7 @@ A feature moves from intent to requirements gate, plan gate, implementation, AI 
 Create:
 
 ```text
-docs/features/<ID>/
+docs/features/<ID>-<slug>/
   state.json
   requirements.md
   plan.md
@@ -58,7 +58,7 @@ Use:
 ai-delivery feature FEA-042 "Scoped Help Assistant"
 ```
 
-This creates `docs/features/FEA-042/`, updates `.ai/registry.json`, and makes the feature active in `.ai/state.json`.
+This creates `docs/features/FEA-042-scoped-help-assistant/`, updates `.ai/registry.json`, and makes the feature active in `.ai/state.json`.
 
 ### 2. Requirements Draft
 

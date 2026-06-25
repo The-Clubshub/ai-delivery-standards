@@ -134,7 +134,7 @@ product-repo/
     architecture/
       overview.md
     features/
-      FEA-001/
+      FEA-001-initial-product-skeleton/
         state.json
         requirements.md
         plan.md
@@ -205,7 +205,7 @@ Detailed role contracts live in `roles/`.
 Each feature folder is durable state, not scratch notes:
 
 ```text
-docs/features/<ID>/
+docs/features/<ID>-<slug>/
   state.json       # machine-readable lifecycle state
   requirements.md # behavior target after requirements gate
   plan.md         # implementation operations after plan gate
@@ -232,15 +232,15 @@ docs/features/<ID>-<slug>/
   review-checklist.md
 ```
 
-V2 keeps those templates for compatibility, but new work should use `docs/features/<ID>/`.
+V2 keeps those templates for compatibility, and new work now uses the same readable folder style: `docs/features/<ID>-<slug>/`.
 
 Recommended migration path:
 
 1. Run `init . --dry-run` to preview the V2 layout.
 2. Run `init .` to add `.ai/`, V2 `AGENTS.md` if missing, and first lifecycle files.
 3. Migrate only active features first.
-4. Treat old slugged `docs/features/<ID>-<slug>` folders as legacy source material.
-5. Use `docs/features/<ID>/state.json` as the authoritative lifecycle state.
+4. Treat old slugged `docs/features/<ID>-<slug>` folders as legacy source material until migrated.
+5. Use `docs/features/<ID>-<slug>/state.json` as the authoritative lifecycle state.
 
 More detail lives in `docs/proposals/migration-strategy.md`.
 

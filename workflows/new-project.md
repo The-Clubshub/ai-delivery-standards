@@ -25,7 +25,7 @@ A product repository has:
 | Standards bundle | `ai-delivery-standards/` |
 | AI delivery guide | `docs/ai-delivery.md` |
 | Architecture overview | `docs/architecture/overview.md` |
-| First feature lifecycle | `docs/features/FEA-001/` |
+| First feature lifecycle | `docs/features/FEA-001-initial-product-skeleton/` |
 
 ## Steps
 
@@ -140,7 +140,7 @@ If a command does not exist yet, record the gap instead of inventing one.
 Before writing production code, create:
 
 ```text
-docs/features/FEA-001/
+docs/features/FEA-001-initial-product-skeleton/
   state.json
   requirements.md
   plan.md
@@ -195,7 +195,7 @@ Follow:
 
 - [ ] `.ai/config.json` exists.
 - [ ] `.ai/registry.json` identifies the active feature.
-- [ ] `docs/features/FEA-001/state.json` exists.
+- [ ] `docs/features/FEA-001-initial-product-skeleton/state.json` exists.
 - [ ] Requirements gate is satisfied before planning.
 - [ ] Plan gate is satisfied before building.
 - [ ] CI or validation commands are documented.

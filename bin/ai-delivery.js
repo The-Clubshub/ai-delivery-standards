@@ -259,7 +259,8 @@ function createFeature(argv, configOverride = null) {
   });
   const featureRoot = featureConfig.featurePath;
   const featureName = nameParts.join(" ");
-  const featureFolder = path.join(target, featureRoot, featureId);
+  const featureFolderName = featureDirectoryName(featureId, featureName);
+  const featureFolder = path.join(target, featureRoot, featureFolderName);
   const dryRun = Boolean(options["dry-run"]);
 
   ensureDirectory(featureFolder, dryRun);
@@ -279,7 +280,7 @@ function createFeature(argv, configOverride = null) {
   writeText(path.join(featureFolder, "activity.md"), featureActivityTemplate(featureId, featureName), { dryRun, overwrite: options.force });
   writeText(path.join(featureFolder, "handoff.md"), featureHandoffTemplate(featureId, featureName), { dryRun, overwrite: options.force });
 
-  updateFeatureRegistry(target, featureConfig, featureId, featureName, { dryRun });
+  updateFeatureRegistry(target, featureConfig, featureId, featureName, featureFolderName, { dryRun });
   updateProjectState(target, featureConfig, featureId, { dryRun, overwrite: true });
 
   logDone(`${dryRun ? "Planned feature artifacts" : "Created feature artifacts"} in ${featureFolder}`);
@@ -660,7 +661,7 @@ function approvalPolicyJson(approvalPolicy) {
   return JSON.stringify(normalizeApprovalPolicy(approvalPolicy), null, 2);
 }
 
-function updateFeatureRegistry(target, config, featureId, featureName, options = {}) {
+function updateFeatureRegistry(target, config, featureId, featureName, featureFolderName, options = {}) {
   const registryPath = path.join(target, config.aiPath, "registry.json");
   const registry = readJson(registryPath, featureRegistryTemplate());
   const features = Array.isArray(registry.features) ? registry.features : [];
@@ -668,7 +669,7 @@ function updateFeatureRegistry(target, config, featureId, featureName, options =
   const entry = {
     id: featureId,
     title: featureName,
-    path: path.posix.join(config.featurePath, featureId),
+    path: path.posix.join(config.featurePath, featureFolderName),
     state: "requirements_draft",
     updatedAt: now()
   };
@@ -736,7 +737,7 @@ When instructions conflict, follow the highest-precedence applicable source:
 1. Active system, developer, platform, and tool instructions.
 2. The user's current request.
 3. This repository \`AGENTS.md\`.
-4. The active feature state and approvals under \`${config.featurePath}/<ID>/\`.
+4. The active feature state and approvals under the path named by \`${config.aiPath}/registry.json\`.
 5. Feature, bug, refactor, architecture, and product docs in this repository.
 6. Vendored \`ai-delivery-standards\` guidance.
 6. General model defaults or habits.
@@ -751,8 +752,8 @@ Before acting, every agent must read:
 2. \`${config.aiPath}/config.json\`
 3. \`${config.aiPath}/registry.json\`
 4. \`${config.aiPath}/state.json\`
-5. The active feature \`${config.featurePath}/<ID>/state.json\`
-6. The active feature \`${config.featurePath}/<ID>/approval.md\`
+5. The active feature \`${config.featurePath}/<ID>-<slug>/state.json\`
+6. The active feature \`${config.featurePath}/<ID>-<slug>/approval.md\`
 7. The relevant role definition in \`${config.standardsPath}/roles/\`
 8. The lifecycle and command protocol:
    - \`${config.standardsPath}/workflows/lifecycle.md\`
@@ -769,7 +770,7 @@ If the active feature cannot be identified, report \`/status\` and ask for a fea
 | Project state | \`${config.aiPath}/state.json\` |
 | Feature registry | \`${config.aiPath}/registry.json\` |
 | Project memory | \`${config.aiPath}/memory/\` |
-| Feature artifacts | \`${config.featurePath}/<ID>/\` |
+| Feature artifacts | \`${config.featurePath}/<ID>-<slug>/\` |
 | Standards bundle | \`${config.standardsPath}/\` |
 | Product docs | \`${config.docsPath}/\` |
 
@@ -810,7 +811,7 @@ State determines the primary role:
 Every feature must have:
 
 \`\`\`text
-${config.featurePath}/<ID>/
+${config.featurePath}/<ID>-<slug>/
   state.json
   requirements.md
   plan.md
@@ -840,9 +841,9 @@ ${approvalPolicyJson(config.approvalPolicy)}
 | --- | --- | --- | --- |
 ${approvalPolicyTransitionRows(config.approvalPolicy)}
 
-\`human_required\` means an explicit human approval must be recorded before the transition. \`not_required\` means the responsible agent may advance the gate after required artifacts or evidence are ready, recording \`not_required\` in \`${config.featurePath}/<ID>/approval.md\` and \`${config.featurePath}/<ID>/state.json\`.
+\`human_required\` means an explicit human approval must be recorded before the transition. \`not_required\` means the responsible agent may advance the gate after required artifacts or evidence are ready, recording \`not_required\` in \`${config.featurePath}/<ID>-<slug>/approval.md\` and \`${config.featurePath}/<ID>-<slug>/state.json\`.
 
-Gate evidence must be recorded in \`${config.featurePath}/<ID>/approval.md\` and mirrored in \`${config.featurePath}/<ID>/state.json\`.
+Gate evidence must be recorded in \`${config.featurePath}/<ID>-<slug>/approval.md\` and mirrored in \`${config.featurePath}/<ID>-<slug>/state.json\`.
 
 Agents may record human approval after it is given. Agents must never self-approve a \`human_required\` gate or infer approval from silence.
 
@@ -959,7 +960,7 @@ This product uses \`${config.standardsPath}\` as its AI-assisted delivery standa
 | Project state | \`${config.aiPath}/state.json\` |
 | Feature registry | \`${config.aiPath}/registry.json\` |
 | Project memory | \`${config.aiPath}/memory/\` |
-| Feature lifecycle folders | \`${config.featurePath}/<ID>/\` |
+| Feature lifecycle folders | \`${config.featurePath}/<ID>-<slug>/\` |
 | Standards bundle | \`${config.standardsPath}/\` |
 | Architecture docs | \`${config.docsPath}/architecture/\` |
 
@@ -989,7 +990,7 @@ The feature may enter \`blocked\` from any non-terminal state.
 Every feature must include:
 
 \`\`\`text
-${config.featurePath}/<ID>/
+${config.featurePath}/<ID>-<slug>/
   state.json
   requirements.md
   plan.md
@@ -1015,7 +1016,7 @@ Gate policy:
 | --- | --- | --- | --- |
 ${approvalPolicyRequiredBeforeRows(config.approvalPolicy)}
 
-\`human_required\` gates need explicit human approval. \`not_required\` gates can advance automatically after the required artifact or evidence exists. Gate evidence lives in \`${config.featurePath}/<ID>/approval.md\` and is mirrored in \`state.json\`.
+\`human_required\` gates need explicit human approval. \`not_required\` gates can advance automatically after the required artifact or evidence exists. Gate evidence lives in \`${config.featurePath}/<ID>-<slug>/approval.md\` and is mirrored in \`state.json\`.
 
 ## Standard Roles
 
@@ -1739,6 +1740,10 @@ function normalizeRelative(value) {
     fail(`Path must be a relative path without '..': ${value}`);
   }
   return normalized;
+}
+
+function featureDirectoryName(featureId, featureName) {
+  return `${featureId}-${slugify(featureName)}`;
 }
 
 function slugify(value) {
