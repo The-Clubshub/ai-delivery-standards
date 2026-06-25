@@ -22,10 +22,11 @@ A product repository has:
 | Feature registry | `.ai/registry.json` |
 | Project memory | `.ai/memory/` |
 | Root agent instructions | `AGENTS.md` |
-| Standards bundle | `ai-delivery-standards/` |
-| AI delivery guide | `docs/ai-delivery.md` |
-| Architecture overview | `docs/architecture/overview.md` |
-| First feature lifecycle | `docs/features/FEA-001-initial-product-skeleton/` |
+| Standards bundle | `.ai/ai-delivery-standards/` |
+| AI delivery guide | `.ai/ai-delivery.md` |
+| Architecture overview | `.ai/architecture/overview.md` |
+| Architecture decisions | `.ai/decisions/` |
+| First feature lifecycle | `.ai/features/FEA-001-initial-product-skeleton/` |
 
 ## Steps
 
@@ -84,7 +85,7 @@ The CLI writes this to `.ai/config.json`.
 
 ### 3. Create Product AI Delivery Guide
 
-Create `docs/ai-delivery.md` with:
+Create `.ai/ai-delivery.md` with:
 
 - Standards version.
 - `.ai/` paths.
@@ -95,7 +96,7 @@ Create `docs/ai-delivery.md` with:
 
 ### 4. Define Initial Architecture
 
-Create `docs/architecture/overview.md` with:
+Create `.ai/architecture/overview.md` with:
 
 - Product purpose.
 - Users and actors.
@@ -140,7 +141,7 @@ If a command does not exist yet, record the gap instead of inventing one.
 Before writing production code, create:
 
 ```text
-docs/features/FEA-001-initial-product-skeleton/
+.ai/features/FEA-001-initial-product-skeleton/
   state.json
   requirements.md
   plan.md
@@ -195,7 +196,7 @@ Follow:
 
 - [ ] `.ai/config.json` exists.
 - [ ] `.ai/registry.json` identifies the active feature.
-- [ ] `docs/features/FEA-001-initial-product-skeleton/state.json` exists.
+- [ ] `.ai/features/FEA-001-initial-product-skeleton/state.json` exists.
 - [ ] Requirements gate is satisfied before planning.
 - [ ] Plan gate is satisfied before building.
 - [ ] CI or validation commands are documented.

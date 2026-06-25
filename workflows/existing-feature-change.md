@@ -11,7 +11,7 @@ The existing feature gains enough living specification to support the requested 
 Create or update:
 
 ```text
-docs/features/<ID>-<slug>/
+.ai/features/<ID>-<slug>/
   reasons-canvas.md
   feature-spec.md
   implementation-plan.md
@@ -22,10 +22,10 @@ docs/features/<ID>-<slug>/
 If the change is primarily a defect, also consider:
 
 ```text
-docs/bugs/<BUG-ID>-<slug>/bugfix-spec.md
+.ai/bugs/<BUG-ID>-<slug>/bugfix-spec.md
 ```
 
-If the change creates a long-lived architecture decision, add an ADR in `docs/decisions/`.
+If the change creates a long-lived architecture decision, add an ADR in `.ai/decisions/`.
 
 ## Key Rule
 
@@ -66,7 +66,7 @@ Do not infer behavior from code alone if tests, docs, or product behavior contra
 If no feature folder exists, create one:
 
 ```bash
-node ai-delivery-standards/bin/ai-delivery.js feature FEA-<ID> "<Existing Feature Name>"
+node .ai/ai-delivery-standards/bin/ai-delivery.js feature FEA-<ID> "<Existing Feature Name>"
 ```
 
 If running from the central standards repo before publishing:
@@ -157,7 +157,7 @@ Verify:
 ## Example Prompt: Amend Existing Feature
 
 ```text
-Use AGENTS.md and ai-delivery-standards.
+Use AGENTS.md and .ai/ai-delivery-standards.
 
 Task: Amend an existing feature that predates this workflow.
 
@@ -170,9 +170,9 @@ Known constraints:
 
 Required process:
 1. Read AGENTS.md.
-2. Read docs/ai-delivery.md and docs/architecture/overview.md.
+2. Read .ai/ai-delivery.md and .ai/architecture/overview.md.
 3. Inspect current saved-search UI, API, data model, permissions, and tests.
-4. Create docs/features/FEA-<ID>-saved-searches/ if missing.
+4. Create .ai/features/FEA-<ID>-saved-searches/ if missing.
 5. Document current production behavior as the baseline.
 6. Specify the rename amendment with acceptance criteria and scope out.
 7. Create implementation-plan.md and test-plan.md.
@@ -184,7 +184,7 @@ Required process:
 ## Example Prompt: Fix Existing Feature
 
 ```text
-Use AGENTS.md and ai-delivery-standards.
+Use AGENTS.md and .ai/ai-delivery-standards.
 
 Task: Fix an existing feature that predates this workflow.
 

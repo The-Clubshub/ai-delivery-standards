@@ -10,8 +10,8 @@ The code structure improves while behavior remains stable and specs stay accurat
 
 | Artifact | Location |
 | --- | --- |
-| Refactor plan | `docs/refactors/<REF-ID>-<slug>/implementation-plan.md` |
-| Test plan | `docs/refactors/<REF-ID>-<slug>/test-plan.md` |
+| Refactor plan | `.ai/refactors/<REF-ID>-<slug>/implementation-plan.md` |
+| Test plan | `.ai/refactors/<REF-ID>-<slug>/test-plan.md` |
 | ADR | Required if architecture boundaries or shared patterns change |
 | Updated feature specs | Required when refactor changes documented structure or contracts |
 
@@ -80,7 +80,7 @@ Update docs when:
 ## Example Prompt
 
 ```text
-Refactor this area under ai-delivery-standards.
+Refactor this area under .ai/ai-delivery-standards.
 
 Area: <module/component/service>
 Problem: <why refactor is needed>
@@ -89,7 +89,7 @@ Behavior constraints:
 
 Process:
 1. Inspect existing tests and behavior.
-2. Create docs/refactors/<REF-ID>-<slug>/implementation-plan.md and test-plan.md.
+2. Create .ai/refactors/<REF-ID>-<slug>/implementation-plan.md and test-plan.md.
 3. Add characterization tests if needed.
 4. Refactor in small operations.
 5. Run validation after each operation.
@@ -103,4 +103,3 @@ Process:
 - [ ] Safety tests exist.
 - [ ] No unapproved feature behavior changed.
 - [ ] Specs and ADRs reflect final structure.
-

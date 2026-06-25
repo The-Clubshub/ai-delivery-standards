@@ -70,7 +70,7 @@ If a project states Bun-only, use Bun commands such as `bun install`, `bun run <
 | Bug fix | `bugfix-spec.md`, plus related feature specs if behavior changes | Reproduction or bounded evidence, regression test, focused affected suite. |
 | API, data, auth, security, infrastructure, or migration change | Feature spec plus ADR when long-lived architecture changes | Contract, integration, security, migration, and rollback validation. |
 | Refactor | Refactor plan and test plan | Characterization tests, focused suite, broader checks when shared behavior changed. |
-| Multiple independent features | `feature-queue.md` plus per-feature artifacts | Complete validation, self-review, and critic review per feature. |
+| Multiple independent features | `.ai/queues/active.md` plus per-feature artifacts | Complete validation, self-review, and critic review per feature. |
 
 ## Operating Mode
 

@@ -36,7 +36,7 @@ Codex must:
    - Identify local conventions before creating artifacts.
 
 2. **Specify**
-   - Create `docs/features/<ID>-<slug>/` when working inside a product repo.
+   - Create `.ai/features/<ID>-<slug>/` when working inside a product repo.
    - Add `reasons-canvas.md`, `feature-spec.md`, `implementation-plan.md`, `test-plan.md`, and `review-checklist.md`.
    - Fill in concrete acceptance criteria, entities, safeguards, and operations.
 
@@ -157,7 +157,7 @@ Feature: Team invitation management
 
 First:
 - Inspect the repo.
-- Create docs/features/FEA-012-team-invitations/ using the required templates.
+- Create .ai/features/FEA-012-team-invitations/ using the required templates.
 - Fill the REASONS Canvas, feature spec, implementation plan, test plan,
   and review checklist.
 

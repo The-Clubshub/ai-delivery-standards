@@ -63,7 +63,7 @@ Example fully automated policy:
 | Quality standards | Engineering, frontend, backend, API, security, accessibility, testing, observability, performance, UI/UX | `standards/` |
 | Templates | V2 feature lifecycle templates plus legacy SPDD templates | `templates/` |
 | Schemas | Machine-readable config, state, registry, and approval schemas | `schemas/` |
-| Bootstrap CLI | Init, sync, feature creation, doctor checks | `bin/ai-delivery.js` |
+| Bootstrap CLI | Init, sync, feature creation, loop engine, doctor checks | `bin/ai-delivery.js` |
 | V2 proposals | Architecture design notes | `docs/proposals/` |
 
 ## Install Into A Project
@@ -128,11 +128,7 @@ product-repo/
     agents/
       role-overrides.md
       tool-adapters.md
-  ai-delivery-standards/
-  docs/
-    ai-delivery.md
-    architecture/
-      overview.md
+    decisions/
     features/
       FEA-001-initial-product-skeleton/
         state.json
@@ -145,9 +141,13 @@ product-repo/
         activity.md
         handoff.md
         artifacts/
+    ai-delivery-standards/
+    ai-delivery.md
+    architecture/
+      overview.md
 ```
 
-`AGENTS.md` is the bootloader. `.ai/` is the operating-system control plane. `ai-delivery-standards/` is the vendored policy library.
+`AGENTS.md` is the bootloader. `.ai/` is the operating-system control plane. `.ai/ai-delivery-standards/` is the vendored policy library.
 
 If a project already has `AGENTS.md`, `init` keeps it unless `--force` is used.
 
@@ -158,13 +158,19 @@ If a project already has `AGENTS.md`, `init` keeps it unless `--force` is used.
 node /path/to/ai-delivery-standards/bin/ai-delivery.js init .
 
 # Create another V2 feature lifecycle folder.
-node ai-delivery-standards/bin/ai-delivery.js feature FEA-002 "Feature Name"
+node .ai/ai-delivery-standards/bin/ai-delivery.js feature FEA-002 "Feature Name"
 
 # Sync the vendored standards bundle.
-node /path/to/ai-delivery-standards/bin/ai-delivery.js sync .
+node .ai/ai-delivery-standards/bin/ai-delivery.js sync .
 
 # Check the project has the expected V2 setup.
-node ai-delivery-standards/bin/ai-delivery.js doctor .
+node .ai/ai-delivery-standards/bin/ai-delivery.js doctor .
+
+# Create a standards-driven autonomous loop from a spec.
+node .ai/ai-delivery-standards/bin/ai-delivery.js loop init --spec SPEC.md --standards AI_STANDARDS.md
+
+# Start or resume the current loop.
+node .ai/ai-delivery-standards/bin/ai-delivery.js loop run
 ```
 
 The package also exposes `ai-delivery` as a bin when installed through a registry or local `npx --package` flow.
@@ -187,6 +193,90 @@ These commands are tool-agnostic. Use them in chat, CLI wrappers, issues, PR com
 
 If a command is not implemented as a CLI subcommand yet, agents must follow the semantics in `commands/command-protocol.md`.
 
+## Loop Engine
+
+The `loop` command turns a spec plus AI Standards into a durable, resumable workflow under `.ai/loops/<loop-id>/`.
+
+It creates:
+
+```text
+.ai/loops/<loop-id>/
+  STATE.json
+  TASKS.md
+  REPORT.md
+  DECISIONS.md
+  VERIFICATION.json
+  REVIEW.md
+  MEMORY.md
+  SPEC_SUMMARY.md
+  SPEC_SUMMARY.json
+  STANDARDS.json
+  STANDARDS_CHECKLIST.md
+  BUILDER_PROMPT.md
+  ACTIVITY.md
+  artifacts/
+    logs/
+```
+
+Create a loop:
+
+```bash
+ai-delivery loop init \
+  --spec SPEC.md \
+  --standards AI_STANDARDS.md \
+  --verify "npm run check"
+```
+
+Run the next loop step:
+
+```bash
+ai-delivery loop run
+```
+
+If no external builder command is configured, the loop writes `BUILDER_PROMPT.md` and waits for an agent to implement the current task. After implementation, continue with:
+
+```bash
+ai-delivery loop run --after-build
+```
+
+You can connect an external agent command:
+
+```bash
+ai-delivery loop init \
+  --spec SPEC.md \
+  --standards AI_STANDARDS.md \
+  --builder-command "codex exec --auto {prompt}" \
+  --verify "npm run check" \
+  --autonomy-tier 2
+```
+
+Loop commands:
+
+| Command | Purpose |
+| --- | --- |
+| `loop init` | Load standards, normalize the spec, plan tasks, and create loop state. |
+| `loop run` | Execute the next decision cycle. |
+| `loop resume` | Continue a paused loop. |
+| `loop status` | Show current status, stage, task, verification, review, and next action. |
+| `loop tasks` | Show task status. |
+| `loop verify` | Run configured or detected verification commands. |
+| `loop results` | Print the current machine-readable verification results. |
+| `loop review` | Review current output against spec, standards, tasks, verification, and safety rules. |
+| `loop approve` | Record human approval for a pending gate. |
+| `loop reject` | Reject a pending gate and block the loop. |
+| `loop pause` | Pause a loop without losing state. |
+| `loop report` | Print the final or current report. |
+
+Autonomy tiers:
+
+| Tier | Name | Allowed Without Human Approval |
+| --- | --- | --- |
+| 1 | Safe autonomous | Read files, inspect logs, run local tests/builds/checks, update local docs/state, local browser/screenshot checks. |
+| 2 | Local implementation | Tier 1 plus local source edits through a configured builder agent. |
+| 3 | Operator approved | Tier 1 and 2 plus explicitly approved high-impact actions only. |
+
+The decision gate always requires human approval for production deploys, live trading changes, public messages, payments or spend increases, destructive data actions, auth/security changes, infrastructure apply operations, and git publishing.
+
 ## Agent Roles
 
 | Role | Owns | Must Not Do |
@@ -205,7 +295,7 @@ Detailed role contracts live in `roles/`.
 Each feature folder is durable state, not scratch notes:
 
 ```text
-docs/features/<ID>-<slug>/
+.ai/features/<ID>-<slug>/
   state.json       # machine-readable lifecycle state
   requirements.md # behavior target after requirements gate
   plan.md         # implementation operations after plan gate
@@ -232,7 +322,7 @@ docs/features/<ID>-<slug>/
   review-checklist.md
 ```
 
-V2 keeps those templates for compatibility, and new work now uses the same readable folder style: `docs/features/<ID>-<slug>/`.
+V2 keeps those templates for compatibility, and new work now uses the same readable folder style: `.ai/features/<ID>-<slug>/`.
 
 Recommended migration path:
 
@@ -240,7 +330,7 @@ Recommended migration path:
 2. Run `init .` to add `.ai/`, V2 `AGENTS.md` if missing, and first lifecycle files.
 3. Migrate only active features first.
 4. Treat old slugged `docs/features/<ID>-<slug>` folders as legacy source material until migrated.
-5. Use `docs/features/<ID>-<slug>/state.json` as the authoritative lifecycle state.
+5. Use `.ai/features/<ID>-<slug>/state.json` as the authoritative lifecycle state.
 
 More detail lives in `docs/proposals/migration-strategy.md`.
 

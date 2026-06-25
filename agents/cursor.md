@@ -16,7 +16,7 @@ Cursor should act as a constrained implementation assistant working from reposit
 
 ## Cursor Workflow
 
-For requests with multiple independent features, use `workflows/autonomous-feature-queue.md`: maintain `docs/features/feature-queue.md`, complete one feature at a time with validation and review evidence, then continue to the next unblocked feature without asking the user to continue.
+For requests with multiple independent features, use `workflows/autonomous-feature-queue.md`: maintain `.ai/queues/active.md`, complete one feature at a time with validation and review evidence, then continue to the next unblocked feature without asking the user to continue.
 
 ### 1. Pin The Standards Context
 
@@ -33,11 +33,11 @@ Attach or reference:
 Before code edits, create:
 
 ```text
-docs/features/<ID>-<slug>/reasons-canvas.md
-docs/features/<ID>-<slug>/feature-spec.md
-docs/features/<ID>-<slug>/implementation-plan.md
-docs/features/<ID>-<slug>/test-plan.md
-docs/features/<ID>-<slug>/review-checklist.md
+.ai/features/<ID>-<slug>/reasons-canvas.md
+.ai/features/<ID>-<slug>/feature-spec.md
+.ai/features/<ID>-<slug>/implementation-plan.md
+.ai/features/<ID>-<slug>/test-plan.md
+.ai/features/<ID>-<slug>/review-checklist.md
 ```
 
 ### 3. Implement Operation By Operation
@@ -140,7 +140,7 @@ Feature: Export filtered customer list to CSV.
 
 Before code:
 - Inspect existing customer list, filtering, permissions, and export utilities.
-- Create the required feature artifacts in docs/features/FEA-018-customer-csv-export/.
+- Create the required feature artifacts in .ai/features/FEA-018-customer-csv-export/.
 
 After artifacts:
 - Implement one operation at a time.

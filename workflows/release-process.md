@@ -10,11 +10,11 @@ The release is traceable to specs, validated, observable, and reversible.
 
 | Artifact | Location |
 | --- | --- |
-| Completed feature or bug artifacts | `docs/features/` or `docs/bugs/` |
+| Completed feature or bug artifacts | `.ai/features/` or `.ai/bugs/` |
 | Review checklist | Each release item |
 | Release notes | Product-specific release location |
 | Runbook updates | Product-specific operations docs |
-| ADR updates | `docs/decisions/`, if decisions changed |
+| ADR updates | `.ai/decisions/`, if decisions changed |
 
 ## Steps
 
@@ -107,7 +107,7 @@ After release:
 ## Example Prompt
 
 ```text
-Prepare this change for release under ai-delivery-standards.
+Prepare this change for release under .ai/ai-delivery-standards.
 
 Release scope:
 - <features/bugs/PRs>
@@ -128,4 +128,3 @@ Process:
 - [ ] Rollback and monitoring are ready.
 - [ ] Release notes are clear.
 - [ ] Post-release sync is planned.
-

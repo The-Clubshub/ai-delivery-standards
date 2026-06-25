@@ -10,9 +10,9 @@ The bug is fixed with root cause, regression coverage, minimal scope, and update
 
 | Artifact | Location |
 | --- | --- |
-| Bugfix spec | `docs/bugs/<BUG-ID>-<slug>/bugfix-spec.md` |
+| Bugfix spec | `.ai/bugs/<BUG-ID>-<slug>/bugfix-spec.md` |
 | Related feature updates | Existing feature artifact folder, if behavior changes |
-| ADR | `docs/decisions/ADR-<ID>.md`, if architecture changes |
+| ADR | `.ai/decisions/ADR-<ID>.md`, if architecture changes |
 
 ## Steps
 
@@ -92,7 +92,7 @@ Update:
 ## Example Prompt
 
 ```text
-Fix this bug under ai-delivery-standards.
+Fix this bug under .ai/ai-delivery-standards.
 
 Bug:
 <description>
@@ -102,7 +102,7 @@ Evidence:
 
 Process:
 1. Inspect relevant code and tests.
-2. Create docs/bugs/<BUG-ID>-<slug>/bugfix-spec.md.
+2. Create .ai/bugs/<BUG-ID>-<slug>/bugfix-spec.md.
 3. Reproduce or document why reproduction is not possible.
 4. Implement the smallest root-cause fix.
 5. Add regression coverage.
@@ -117,4 +117,3 @@ Process:
 - [ ] Regression test exists or gap is documented.
 - [ ] Related specs are updated if behavior changed.
 - [ ] Validation evidence is recorded.
-

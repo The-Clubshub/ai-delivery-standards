@@ -2,6 +2,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { handleLoopCommand } = require("../lib/loop-engine");
 
 const repoRoot = path.resolve(__dirname, "..");
 const packageJson = readJson(path.join(repoRoot, "package.json"), {});
@@ -10,6 +11,7 @@ const MANAGED_ITEMS = [
   "README.md",
   "package.json",
   "bin",
+  "lib",
   "agents",
   "commands",
   "roles",
@@ -42,7 +44,8 @@ const V2_FEATURE_ARTIFACTS = [
 
 const DEFAULT_AGENT_INSTRUCTION_PATH = "AGENTS.md";
 const DEFAULT_AI_PATH = ".ai";
-const DEFAULT_DOCS_PATH = "docs";
+const DEFAULT_DOCS_PATH = ".ai";
+const DEFAULT_STANDARDS_PATH = ".ai/ai-delivery-standards";
 const APPROVAL_GATES = ["requirements", "plan", "implementation"];
 const APPROVAL_GATE_LABELS = {
   requirements: "Requirements",
@@ -114,6 +117,9 @@ function main(argv) {
       case "doctor":
         doctor(argv.slice(1));
         break;
+      case "loop":
+        handleLoopCommand(argv.slice(1), { commandName, fail, logDone });
+        break;
       case "help":
       case "--help":
       case "-h":
@@ -150,14 +156,15 @@ function initProject(argv) {
 
   const target = path.resolve(options.positionals[0] || ".");
   const existingConfig = readConfig(target);
-  const aiPath = normalizeRelative(options["ai-path"] || existingConfig.aiPath || DEFAULT_AI_PATH);
-  const standardsPath = normalizeRelative(options["standards-path"] || existingConfig.standardsPath || "ai-delivery-standards");
-  const docsPath = normalizeDocsPath(options["docs-path"] || existingConfig.docsPath, aiPath);
+  const pathConfig = options.force ? {} : existingConfig;
+  const aiPath = normalizeRelative(options["ai-path"] || pathConfig.aiPath || DEFAULT_AI_PATH);
+  const standardsPath = normalizeRelative(options["standards-path"] || pathConfig.standardsPath || DEFAULT_STANDARDS_PATH);
+  const docsPath = normalizeDocsPath(options["docs-path"] || pathConfig.docsPath, aiPath);
   const agentInstructionPath = DEFAULT_AGENT_INSTRUCTION_PATH;
   const featureId = options["feature-id"] || "FEA-001";
   const featureName = options["feature-name"] || "Initial Product Skeleton";
   const dryRun = Boolean(options["dry-run"]);
-  const approvalPolicy = resolveApprovalPolicyOptions(existingConfig.approvalPolicy, options);
+  const approvalPolicy = resolveApprovalPolicyOptions(pathConfig.approvalPolicy, options);
 
   ensureDirectory(target, dryRun);
   syncStandards([
@@ -165,11 +172,25 @@ function initProject(argv) {
     "--standards-path",
     standardsPath,
     "--skip-agent",
+    ...(options.force ? ["--force"] : []),
     ...(dryRun ? ["--dry-run"] : [])
   ]);
 
   const configPath = path.join(target, ".ai-delivery.json");
-  const config = buildProjectConfig({ ...existingConfig, standardsPath, docsPath, aiPath, agentInstructionPath, approvalPolicy });
+  const config = buildProjectConfig({
+    standardsPath,
+    docsPath,
+    aiPath,
+    agentInstructionPath,
+    approvalPolicy,
+    featurePath: pathConfig.featurePath,
+    legacyFeaturePath: pathConfig.legacyFeaturePath,
+    decisionPath: pathConfig.decisionPath,
+    requiredFeatureArtifacts: pathConfig.requiredFeatureArtifacts,
+    legacyFeatureArtifacts: pathConfig.legacyFeatureArtifacts,
+    commandProtocol: pathConfig.commandProtocol,
+    standardsVersion: pathConfig.standardsVersion
+  });
   writeText(configPath, `${JSON.stringify(config, null, 2)}\n`, { dryRun, overwrite: options.force });
 
   ensureAiOperatingSystem(target, config, { dryRun, overwrite: options.force });
@@ -197,13 +218,13 @@ function initProject(argv) {
 
 function syncStandards(argv) {
   const options = parseArgs(argv, {
-    boolean: ["dry-run", "skip-agent"],
+    boolean: ["dry-run", "skip-agent", "force"],
     string: ["standards-path"]
   });
 
   const target = path.resolve(options.positionals[0] || ".");
-  const existingConfig = readConfig(target);
-  const standardsPath = normalizeRelative(options["standards-path"] || existingConfig.standardsPath || "ai-delivery-standards");
+  const existingConfig = options.force ? {} : readConfig(target);
+  const standardsPath = normalizeRelative(options["standards-path"] || existingConfig.standardsPath || DEFAULT_STANDARDS_PATH);
   const agentInstructionPath = DEFAULT_AGENT_INSTRUCTION_PATH;
   const config = buildProjectConfig({ ...existingConfig, standardsPath, agentInstructionPath });
   const destination = path.join(target, standardsPath);
@@ -294,10 +315,10 @@ function doctor(argv) {
 
   const target = path.resolve(options.positionals[0] || ".");
   const config = readConfig(target);
-  const standardsPath = path.join(target, config.standardsPath || "ai-delivery-standards");
+  const standardsPath = path.join(target, config.standardsPath || DEFAULT_STANDARDS_PATH);
   const docsPath = path.join(target, config.docsPath || DEFAULT_DOCS_PATH);
   const aiPath = path.join(target, config.aiPath || DEFAULT_AI_PATH);
-  const featureRoot = path.join(target, config.featurePath || path.posix.join(config.docsPath || DEFAULT_DOCS_PATH, "features"));
+  const featurePath = path.join(target, config.featurePath || path.posix.join(config.docsPath || DEFAULT_DOCS_PATH, "features"));
   const agentInstructionPath = DEFAULT_AGENT_INSTRUCTION_PATH;
   const checks = [];
 
@@ -316,17 +337,18 @@ function doctor(argv) {
   checks.push(checkExists(path.join(standardsPath, "standards", "accessibility.md"), "accessibility standards"));
   checks.push(checkExists(path.join(docsPath, "ai-delivery.md"), "product AI delivery guide"));
   checks.push(checkExists(path.join(docsPath, "architecture", "overview.md"), "architecture overview"));
+  checks.push(checkExists(path.join(target, config.decisionPath || path.posix.join(config.aiPath || DEFAULT_AI_PATH, "decisions")), "architecture decisions folder"));
 
-  const featureFolders = fs.existsSync(featureRoot)
-    ? fs.readdirSync(featureRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory())
+  const featureFolders = fs.existsSync(featurePath)
+    ? fs.readdirSync(featurePath, { withFileTypes: true }).filter((entry) => entry.isDirectory())
     : [];
   checks.push({
     ok: featureFolders.length > 0,
     label: "at least one V2 feature artifact folder",
-    detail: featureRoot
+    detail: featurePath
   });
   if (featureFolders.length > 0) {
-    const firstFeature = path.join(featureRoot, featureFolders[0].name);
+    const firstFeature = path.join(featurePath, featureFolders[0].name);
     for (const file of V2_FEATURE_ARTIFACTS) {
       checks.push(checkExists(path.join(firstFeature, file), `V2 feature artifact ${file}`));
     }
@@ -437,6 +459,7 @@ function ensureAiOperatingSystem(target, config, options = {}) {
   ensureDirectory(path.join(aiPath, "memory"), options.dryRun);
   ensureDirectory(path.join(aiPath, "queues"), options.dryRun);
   ensureDirectory(path.join(aiPath, "agents"), options.dryRun);
+  ensureDirectory(path.join(target, config.decisionPath), options.dryRun);
 
   writeJson(path.join(aiPath, "config.json"), aiConfigTemplate(config), { dryRun: options.dryRun, overwrite: options.overwrite });
   writeJson(path.join(aiPath, "registry.json"), featureRegistryTemplate(), { dryRun: options.dryRun, overwrite: options.overwrite });
@@ -454,10 +477,10 @@ function ensureAiOperatingSystem(target, config, options = {}) {
 
 function buildProjectConfig(overrides = {}) {
   const aiPath = normalizeRelative(overrides.aiPath || DEFAULT_AI_PATH);
-  const standardsPath = normalizeRelative(overrides.standardsPath || "ai-delivery-standards");
+  const standardsPath = normalizeRelative(overrides.standardsPath || DEFAULT_STANDARDS_PATH);
   const docsPath = normalizeDocsPath(overrides.docsPath, aiPath);
   const featurePath = normalizeFeaturePath(overrides.featurePath, docsPath, aiPath);
-  const legacyFeaturePath = normalizeDocsChildPath(overrides.legacyFeaturePath, docsPath, aiPath, "features");
+  const legacyFeaturePath = normalizeRelative(overrides.legacyFeaturePath || "docs/features");
   const approvalPolicy = normalizeApprovalPolicy(overrides.approvalPolicy);
 
   return {
@@ -707,7 +730,7 @@ function updateProjectState(target, config, featureId, options = {}) {
 function productAgentTemplate(config) {
   return `# Agent Instructions
 
-This repository uses \`ai-delivery-standards\` V2 as its AI project operating system.
+This repository uses \`${config.standardsPath}\` V2 as its AI project operating system.
 
 Every AI agent working in this project must follow this file before making changes.
 
@@ -739,8 +762,8 @@ When instructions conflict, follow the highest-precedence applicable source:
 3. This repository \`AGENTS.md\`.
 4. The active feature state and approvals under the path named by \`${config.aiPath}/registry.json\`.
 5. Feature, bug, refactor, architecture, and product docs in this repository.
-6. Vendored \`ai-delivery-standards\` guidance.
-6. General model defaults or habits.
+6. Vendored \`${config.standardsPath}\` guidance.
+7. General model defaults or habits.
 
 If a request conflicts with the state machine, the state machine wins. Stop and explain the next allowed action.
 
@@ -772,6 +795,7 @@ If the active feature cannot be identified, report \`/status\` and ask for a fea
 | Project memory | \`${config.aiPath}/memory/\` |
 | Feature artifacts | \`${config.featurePath}/<ID>-<slug>/\` |
 | Standards bundle | \`${config.standardsPath}/\` |
+| Architecture decisions | \`${config.decisionPath}/\` |
 | Product docs | \`${config.docsPath}/\` |
 
 ## Required States
@@ -921,7 +945,7 @@ Before finishing:
 ## Copy-Paste Agent Prompt
 
 \`\`\`text
-Use AGENTS.md and ai-delivery-standards V2.
+Use AGENTS.md and ${config.standardsPath} V2.
 
 Task: <describe task>
 
@@ -962,6 +986,7 @@ This product uses \`${config.standardsPath}\` as its AI-assisted delivery standa
 | Project memory | \`${config.aiPath}/memory/\` |
 | Feature lifecycle folders | \`${config.featurePath}/<ID>-<slug>/\` |
 | Standards bundle | \`${config.standardsPath}/\` |
+| Architecture decisions | \`${config.decisionPath}/\` |
 | Architecture docs | \`${config.docsPath}/architecture/\` |
 
 ## Required Lifecycle
@@ -1785,20 +1810,22 @@ Usage:
   ${cli} init [target] [options]
   ${cli} sync [target] [options]
   ${cli} feature <FEATURE-ID> <feature name> [options]
+  ${cli} loop <command> [options]
   ${cli} doctor [target]
 
 Commands:
   default    With no command, initialize the current directory.
-  init       Install/sync standards, create product docs, and create first feature artifacts.
+  init       Install/sync standards, create AI delivery artifacts, and seed the first feature.
   sync       Sync this standards bundle into a product repository and seed AGENTS.md if missing.
   feature    Create a feature artifact folder from the required templates.
+  loop       Run resumable standards-driven agent loops.
   doctor     Check whether a repository has the expected AI delivery setup.
 
 Options:
-  --standards-path <path>  Standards bundle path in the target repo. Default: ai-delivery-standards
-  --docs-path <path>       Product docs path. Default: docs
+  --standards-path <path>  Standards bundle path in the target repo. Default: .ai/ai-delivery-standards
+  --docs-path <path>       Product docs path. Default: .ai
   --ai-path <path>         AI operating-system path. Default: .ai
-  --feature-root <path>    V2 feature lifecycle root. Default: docs/features
+  --feature-root <path>    V2 feature lifecycle root. Default: .ai/features
   --feature-id <id>        Initial feature ID for init. Default: FEA-001
   --feature-name <name>    Initial feature name for init. Default: Initial Product Skeleton
   --approval-policy <mode> Set all gates to human_required or not_required.
@@ -1810,7 +1837,7 @@ Options:
   --implementation-approval <mode>
                            Set implementation gate policy.
   --target <path>          Target repo for feature command. Default: .
-  --force                  Overwrite generated product docs or feature artifacts.
+  --force                  Overwrite generated product docs, config, or feature artifacts.
   --dry-run                Print planned writes without changing files.
 
 Examples:
@@ -1822,6 +1849,8 @@ Examples:
   ${cli} init ../my-product --autonomous-after-requirements
   ${cli} init ../my-product --approval-policy not_required
   ${cli} feature FEA-042 "Scoped Help Assistant" --target ../my-product
+  ${cli} loop init --target ../my-product --spec SPEC.md --standards AI_STANDARDS.md
+  ${cli} loop run --target ../my-product
   ${cli} sync ../my-product
   ${cli} doctor ../my-product
 `);

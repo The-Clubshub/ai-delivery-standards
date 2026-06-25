@@ -27,7 +27,7 @@ A feature batch moves through a queue automatically. Each feature is specified, 
 For each feature, create or update:
 
 ```text
-docs/features/<ID>-<slug>/
+.ai/features/<ID>-<slug>/
   reasons-canvas.md
   feature-spec.md
   implementation-plan.md
@@ -38,7 +38,7 @@ docs/features/<ID>-<slug>/
 For the batch, create or update a queue log when the work spans more than one feature:
 
 ```text
-docs/features/feature-queue.md
+.ai/queues/active.md
 ```
 
 Use `templates/feature-queue.md` for the queue log.
@@ -184,7 +184,7 @@ Only stop when:
 
 ## Queue Status Values
 
-Use these status values in `feature-queue.md`:
+Use these status values in `.ai/queues/active.md`:
 
 - `Queued`
 - `In progress`
@@ -205,7 +205,7 @@ Features:
 3. Add saved-search delete confirmation.
 
 Process:
-- Create or update docs/features/feature-queue.md.
+- Create or update `.ai/queues/active.md`.
 - For each feature, restate objective and acceptance criteria.
 - Create or update required feature artifacts.
 - Implement the smallest clean solution.
