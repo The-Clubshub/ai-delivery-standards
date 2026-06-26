@@ -28,6 +28,18 @@ Describe the forces that require a decision:
 
 State the decision clearly.
 
+## AI Model Routing
+
+Architecture decisions must use GPT-5.5 or an explicitly approved equal-or-stronger model.
+
+```yaml
+ai_provider:
+  provider: openai
+  model: gpt-5.5
+  reason: structural decisions have high long-term cost
+  requires_premium_review: true
+```
+
 ## Options Considered
 
 | Option | Benefits | Costs | Decision |
@@ -71,4 +83,3 @@ Describe what would cause this ADR to be replaced and how to move away from the 
 ## References
 
 - `<link>`
-

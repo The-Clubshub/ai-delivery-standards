@@ -51,6 +51,12 @@ Example fully automated policy:
 }
 ```
 
+## AI Model Routing
+
+Every task plan and delivery step must declare `ai_provider` before work starts. New project configs include a `modelRouting` matrix, and the authoritative standard lives in `standards/ai-model-routing.md`.
+
+High-risk work such as architecture, auth, billing, payments, database, migrations, permissions, security, customer data, and final code review routes to OpenAI GPT-5.5. Bounded implementation, refactoring, standard unit tests, and low-risk documentation may use Z.ai GLM-5.2, but any GLM-5.2 work touching premium-review areas must receive GPT-5.5 review before merge.
+
 ## What This Repository Provides
 
 | Area | What It Standardizes | Where |
@@ -60,7 +66,7 @@ Example fully automated policy:
 | Agent roles | Requirements, Planner, Builder, Reviewer, Tester, Sync | `roles/` |
 | Commands | Universal lifecycle command protocol | `commands/` |
 | Lifecycle workflows | V2 state machine and delivery workflows | `workflows/` |
-| Quality standards | Engineering, frontend, backend, API, security, accessibility, testing, observability, performance, UI/UX | `standards/` |
+| Quality standards | Engineering, AI model routing, frontend, backend, API, security, accessibility, testing, observability, performance, UI/UX | `standards/` |
 | Templates | V2 feature lifecycle templates plus legacy SPDD templates | `templates/` |
 | Schemas | Machine-readable config, state, registry, and approval schemas | `schemas/` |
 | Bootstrap CLI | Init, sync, feature creation, loop engine, doctor checks | `bin/ai-delivery.js` |

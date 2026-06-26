@@ -15,6 +15,14 @@ source_spec: feature-spec.md
 
 Validate the assistant as a pipeline with deterministic seams. Unit test schema validation, classification decisions, evidence gating, and output parsing. Integration test retrieval permissions and API contracts. Component and accessibility test the UI. Add AI evaluation cases for grounded answers, refusals, insufficient evidence, ambiguous inputs, prompt injection, and schema compliance.
 
+## AI Model Routing
+
+| Step | Provider | Model | Reason | Reviewer |
+|---|---|---|---|---|
+| Standard unit tests | Z.ai | GLM-5.2 | Cost-effective deterministic coverage | GPT-5.5 |
+| Edge-case and injection evals | OpenAI | GPT-5.5 | Failure-mode and safety reasoning | N/A |
+| Auth and tenant tests | OpenAI | GPT-5.5 | Permission and customer-data boundary | N/A |
+
 ## Test Matrix
 
 | Requirement Or Risk | Test Type | Test Case | Expected Result | Automation |
@@ -182,4 +190,3 @@ npm run evals -- help-assistant
 | --- | --- | --- | --- |
 | Retrieval threshold needs tuning with production questions | Over-refusal or weak answers | AI Platform | Review eval results after internal beta |
 | Full screen reader matrix depends on product support policy | Missed AT/browser-specific issue | Product Experience | Define supported AT matrix |
-

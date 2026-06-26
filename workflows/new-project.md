@@ -92,6 +92,7 @@ Create `.ai/ai-delivery.md` with:
 - Required lifecycle states.
 - Agent behavior rules.
 - Approval gates.
+- AI model routing.
 - Quality gates.
 
 ### 4. Define Initial Architecture
@@ -171,7 +172,7 @@ If `approvalPolicy.requirements` is `not_required`, record `not_required` in `ap
 
 ### 9. Satisfy Plan Gate
 
-Do not scaffold application code until the plan gate is satisfied. If `approvalPolicy.plan` is `human_required`, approve with:
+Do not scaffold application code until the plan gate is satisfied and `plan.md` declares AI model routing for every operation. If `approvalPolicy.plan` is `human_required`, approve with:
 
 ```text
 /approve-plan
@@ -199,6 +200,7 @@ Follow:
 - [ ] `.ai/features/FEA-001-initial-product-skeleton/state.json` exists.
 - [ ] Requirements gate is satisfied before planning.
 - [ ] Plan gate is satisfied before building.
+- [ ] First feature plan includes AI model routing.
 - [ ] CI or validation commands are documented.
 - [ ] Security and accessibility baselines are defined.
 - [ ] Final specs match the created project skeleton.

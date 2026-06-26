@@ -14,6 +14,16 @@ updated: YYYY-MM-DD
 
 ## Test Strategy
 
+## AI Model Routing
+
+Use `standards/ai-model-routing.md` when selecting models for test design and test generation.
+
+| Step | Provider | Model | Reason | Reviewer |
+|---|---|---|---|---|
+| Unit tests | Z.ai | GLM-5.2 | Cost-effective standard coverage | GPT-5.5 |
+| Edge case tests | OpenAI | GPT-5.5 | Failure-mode reasoning | N/A |
+| Security tests | OpenAI | GPT-5.5 | Security-sensitive coverage | N/A |
+
 ## Acceptance Criteria Traceability
 
 ## Test Matrix
@@ -23,4 +33,3 @@ updated: YYYY-MM-DD
 ## Validation Evidence
 
 ## Known Gaps
-

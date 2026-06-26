@@ -83,5 +83,7 @@ For refused commands, report:
 - AI agents never execute approval commands as the approver.
 - AI agents may record `not_required` only when `.ai/config.json` explicitly configures that gate as `not_required`.
 - `/build` requires requirements and plan gates to be satisfied.
+- `/build` requires AI model routing for the current operation.
+- `/ai-review` fails standards validation when model routing is missing or premium-review rules are unsatisfied.
 - `/complete` requires review evidence, test evidence, and the implementation gate to be satisfied.
 - Invalid commands fail closed and explain the next allowed action.

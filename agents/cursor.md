@@ -10,6 +10,7 @@ Cursor should act as a constrained implementation assistant working from reposit
 
 - Use specs as the source of truth.
 - Prefer small, reviewable edits.
+- Require AI model routing in plans before code edits.
 - Keep AI context grounded in open files and repository search.
 - Do not rely on chat memory as durable intent.
 - Keep docs, specs, and code synchronized.
@@ -25,6 +26,7 @@ Attach or reference:
 - `agents/cursor.md`
 - `templates/reasons-canvas.md`
 - `templates/feature-spec.md`
+- `standards/ai-model-routing.md`
 - Relevant files from `standards/`
 - Existing product docs and tests
 
@@ -50,6 +52,7 @@ Implement only Operation 2 from implementation-plan.md.
 Constraints:
 - Do not modify files outside the listed targets unless you explain why.
 - Add or update the tests listed for Operation 2.
+- Follow the operation's `ai_provider` routing and record GPT-5.5 review when required.
 - Do not implement later operations.
 - If the codebase requires a different approach, update the plan first.
 ```
@@ -101,6 +104,8 @@ Before accepting Cursor-generated changes:
 - Search for TODOs, console logs, debug code, and unused exports.
 - Run tests or record why they were not run.
 - Verify generated code did not add unapproved dependencies.
+- Verify the final review model is equal or stronger than the implementation model.
+- Verify GPT-5.5 reviewed any GLM-5.2 work touching auth, billing, payments, migrations, permissions, or customer data.
 - Verify specs reflect final code.
 
 ## Hallucination Controls

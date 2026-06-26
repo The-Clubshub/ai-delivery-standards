@@ -87,6 +87,109 @@ const APPROVAL_POLICY_ALIASES = {
   false: "not_required"
 };
 
+const DEFAULT_AI_MODEL_ROUTING_ROWS = [
+  {
+    step: "Planning",
+    provider: "OpenAI",
+    model: "GPT-5.5",
+    reason: "Architecture/product reasoning",
+    reviewer: "N/A"
+  },
+  {
+    step: "Implementation",
+    provider: "Z.ai",
+    model: "GLM-5.2",
+    reason: "Bulk code generation",
+    reviewer: "GPT-5.5"
+  },
+  {
+    step: "Review",
+    provider: "OpenAI",
+    model: "GPT-5.5",
+    reason: "Final QA",
+    reviewer: "N/A"
+  }
+];
+
+const DEFAULT_MODEL_ROUTING = {
+  product_strategy: {
+    provider: "openai",
+    model: "gpt-5.5",
+    reason: "high-level reasoning and product judgement",
+    requires_premium_review: true
+  },
+  architecture: {
+    provider: "openai",
+    model: "gpt-5.5",
+    reason: "structural decisions have high long-term cost",
+    requires_premium_review: true
+  },
+  database_schema: {
+    provider: "openai",
+    model: "gpt-5.5",
+    reason: "schema mistakes are expensive to reverse",
+    requires_premium_review: true
+  },
+  implementation: {
+    provider: "zai",
+    model: "glm-5.2",
+    reason: "cost-effective for bulk coding",
+    fallback_model: "gpt-5.5",
+    requires_premium_review: false
+  },
+  refactoring: {
+    provider: "zai",
+    model: "glm-5.2",
+    reason: "good for repetitive code changes",
+    fallback_model: "gpt-5.5",
+    requires_premium_review: false
+  },
+  unit_tests: {
+    provider: "zai",
+    model: "glm-5.2",
+    reason: "cost-effective for standard test coverage",
+    fallback_model: "gpt-5.5",
+    requires_premium_review: false
+  },
+  edge_case_tests: {
+    provider: "openai",
+    model: "gpt-5.5",
+    reason: "better reasoning around failure modes",
+    requires_premium_review: false
+  },
+  code_review: {
+    provider: "openai",
+    model: "gpt-5.5",
+    reason: "final quality gate",
+    requires_premium_review: false
+  },
+  security_review: {
+    provider: "openai",
+    model: "gpt-5.5",
+    reason: "security-sensitive work must use strongest reviewer",
+    requires_premium_review: true
+  },
+  auth_billing_payments: {
+    provider: "openai",
+    model: "gpt-5.5",
+    reason: "high-risk business-critical code",
+    requires_premium_review: true
+  },
+  documentation: {
+    provider: "zai",
+    model: "glm-5.2",
+    reason: "low-risk text generation",
+    fallback_model: "gpt-5.5",
+    requires_premium_review: false
+  },
+  marketing_copy: {
+    provider: "openai",
+    model: "gpt-5.5",
+    reason: "stronger taste, positioning and brand judgement",
+    requires_premium_review: true
+  }
+};
+
 main(process.argv.slice(2));
 
 function main(argv) {
@@ -333,7 +436,9 @@ function doctor(argv) {
   checks.push(checkExists(path.join(standardsPath, "commands", "command-protocol.md"), "V2 command protocol"));
   checks.push(checkExists(path.join(standardsPath, "roles", "builder-agent.md"), "V2 role definitions"));
   checks.push(checkExists(path.join(standardsPath, "schemas", "feature-state.schema.json"), "V2 feature state schema"));
+  checks.push(checkExists(path.join(standardsPath, "schemas", "model-routing.schema.json"), "model routing schema"));
   checks.push(checkExists(path.join(standardsPath, "templates", "v2", "feature", "requirements.md"), "V2 requirements template"));
+  checks.push(checkExists(path.join(standardsPath, "standards", "ai-model-routing.md"), "AI model routing standard"));
   checks.push(checkExists(path.join(standardsPath, "standards", "accessibility.md"), "accessibility standards"));
   checks.push(checkExists(path.join(docsPath, "ai-delivery.md"), "product AI delivery guide"));
   checks.push(checkExists(path.join(docsPath, "architecture", "overview.md"), "architecture overview"));
@@ -352,6 +457,8 @@ function doctor(argv) {
     for (const file of V2_FEATURE_ARTIFACTS) {
       checks.push(checkExists(path.join(firstFeature, file), `V2 feature artifact ${file}`));
     }
+    checks.push(checkFileContains(path.join(firstFeature, "plan.md"), "## AI Model Routing", "V2 feature plan AI model routing"));
+    checks.push(checkFileContains(path.join(firstFeature, "review.md"), "## AI Model Routing", "V2 feature review AI model routing"));
   }
 
   for (const check of checks) {
@@ -497,6 +604,9 @@ function buildProjectConfig(overrides = {}) {
       : V2_FEATURE_ARTIFACTS,
     legacyFeatureArtifacts: LEGACY_FEATURE_TEMPLATE_FILES,
     approvalPolicy,
+    modelRouting: overrides.modelRouting && typeof overrides.modelRouting === "object"
+      ? overrides.modelRouting
+      : DEFAULT_MODEL_ROUTING,
     commandProtocol: overrides.commandProtocol || "universal-command-protocol-v2",
     standardsVersion: overrides.standardsVersion || packageJson.version || "local"
   };
@@ -573,6 +683,7 @@ function aiConfigTemplate(config) {
     decisionPath: config.decisionPath,
     commandProtocol: config.commandProtocol,
     approvalPolicy: config.approvalPolicy,
+    modelRouting: config.modelRouting,
     requiredFeatureArtifacts: config.requiredFeatureArtifacts
   };
 }
@@ -682,6 +793,21 @@ function approvalPolicyRequiredBeforeRows(approvalPolicy) {
 
 function approvalPolicyJson(approvalPolicy) {
   return JSON.stringify(normalizeApprovalPolicy(approvalPolicy), null, 2);
+}
+
+function aiModelRoutingRows(rows = DEFAULT_AI_MODEL_ROUTING_ROWS) {
+  return rows
+    .map((row) => `| ${row.step} | ${row.provider} | ${row.model} | ${row.reason} | ${row.reviewer} |`)
+    .join("\n");
+}
+
+function aiProviderYaml({ provider = "zai", model = "glm-5.2", reason = "bounded implementation from approved plan", fallbackModel = "gpt-5.5", requiresPremiumReview = false } = {}) {
+  const fallbackLine = fallbackModel ? `  fallback_model: ${fallbackModel}\n` : "";
+  return `ai_provider:
+  provider: ${provider}
+  model: ${model}
+  reason: ${reason}
+${fallbackLine}  requires_premium_review: ${requiresPremiumReview}`;
 }
 
 function updateFeatureRegistry(target, config, featureId, featureName, featureFolderName, options = {}) {
@@ -871,6 +997,21 @@ Gate evidence must be recorded in \`${config.featurePath}/<ID>-<slug>/approval.m
 
 Agents may record human approval after it is given. Agents must never self-approve a \`human_required\` gate or infer approval from silence.
 
+## AI Model Routing
+
+Every task plan and delivery step must declare \`ai_provider\` before work starts, following \`${config.standardsPath}/standards/ai-model-routing.md\`.
+
+| Step | Provider | Model | Reason | Reviewer |
+|---|---|---|---|---|
+${aiModelRoutingRows()}
+
+Rules:
+
+- GLM-5.2 may implement code but must not make final architecture, auth, billing, database, or security decisions.
+- Any GLM-5.2 implementation touching auth, billing, payments, migrations, permissions, or customer data must receive GPT-5.5 review before merge.
+- Pull requests and handoffs must include a model usage summary.
+- Missing model routing fails standards validation.
+
 ## Universal Commands
 
 Use these commands in chat, CLI, issues, or PR comments:
@@ -893,6 +1034,7 @@ Agents must not:
 
 - Build before the requirements gate is satisfied.
 - Build before the plan gate is satisfied.
+- Build from a plan that is missing AI model routing.
 - Plan before the requirements gate is satisfied.
 - Complete a feature before the implementation gate is satisfied.
 - Self-approve any \`human_required\` gate.
@@ -955,9 +1097,11 @@ Before implementation:
 3. Read the active feature state and approval files.
 4. Determine the current role from the state machine.
 5. Do not edit production code until requirements and plan gates are satisfied.
+6. Confirm the active operation declares ai_provider.
 
 During implementation:
 - Work only from approved plan operations.
+- Follow standards/ai-model-routing.md.
 - Add or update tests with the behavior change.
 - Apply the relevant standards.
 - Stop and return to the correct draft state if implementation needs to diverge.
@@ -1053,6 +1197,16 @@ ${approvalPolicyRequiredBeforeRows(config.approvalPolicy)}
 - Sync Agent
 
 Role behavior is defined in \`${config.standardsPath}/roles/\`.
+
+## AI Model Routing
+
+Every plan, task, and pull request must include model routing from \`${config.standardsPath}/standards/ai-model-routing.md\`.
+
+| Step | Provider | Model | Reason | Reviewer |
+|---|---|---|---|---|
+${aiModelRoutingRows()}
+
+Missing routing fails standards validation. GPT-5.5 review is required for GLM-5.2-generated work touching auth, billing, payments, migrations, permissions, or customer data.
 
 ## Universal Commands
 
@@ -1331,23 +1485,39 @@ updated: ${today()}
 - [ ] Requirements gate status is mirrored in \`state.json\`.
 - [ ] Relevant repository context has been inspected.
 - [ ] Relevant standards have been identified.
+- [ ] AI model routing is declared before work starts.
 
 ## Implementation Rules
 
 - Implement only approved scope from \`requirements.md\`.
+- Follow \`standards/ai-model-routing.md\` for every operation.
 - Work operation by operation.
 - Update tests with the operation that changes behavior.
 - Stop and return to the right draft state if the implementation needs to diverge.
 
+## AI Model Routing
+
+Every operation must include an \`ai_provider\` block.
+
+| Step | Provider | Model | Reason | Reviewer |
+|---|---|---|---|---|
+${aiModelRoutingRows()}
+
 ## Operation Plan
 
-| Step | Status | Operation | Files Or Modules | Tests | Notes |
-| --- | --- | --- | --- | --- | --- |
-| 1 | Not started | <operation> | <files> | <tests> | <notes> |
+| Step | Status | Operation | Provider | Model | Reviewer | Files Or Modules | Tests | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Not started | <operation> | <provider> | <model> | <reviewer> | <files> | <tests> | <notes> |
 
 ## Detailed Operations
 
 ### Operation 1: <name>
+
+AI Provider:
+
+\`\`\`yaml
+${aiProviderYaml()}
+\`\`\`
 
 Purpose:
 
@@ -1381,6 +1551,7 @@ Rollback:
 
 - [ ] Operations are ordered and bounded.
 - [ ] Acceptance criteria map to tests.
+- [ ] AI model routing is complete for every operation.
 - [ ] Plan is ready for the configured approval policy.
 `;
 }
@@ -1403,6 +1574,16 @@ updated: ${today()}
 ## Test Strategy
 
 Describe how this feature will be validated.
+
+## AI Model Routing
+
+Use \`standards/ai-model-routing.md\` when selecting models for test design and test generation.
+
+| Step | Provider | Model | Reason | Reviewer |
+|---|---|---|---|---|
+| Unit tests | Z.ai | GLM-5.2 | Cost-effective standard coverage | GPT-5.5 |
+| Edge case tests | OpenAI | GPT-5.5 | Failure-mode reasoning | N/A |
+| Security tests | OpenAI | GPT-5.5 | Security-sensitive coverage | N/A |
 
 ## Acceptance Criteria Traceability
 
@@ -1455,6 +1636,22 @@ updated: ${today()}
 - Requirements:
 - Plan:
 - Diff:
+
+## AI Model Routing
+
+- [ ] Every step has an \`ai_provider\` field.
+- [ ] Final review model is equal or stronger than the implementation model.
+- [ ] GPT-5.5 reviewed any GLM-5.2 work touching auth, billing, payments, migrations, permissions, or customer data.
+
+| Step | Provider | Model | Reason | Reviewer |
+|---|---|---|---|---|
+${aiModelRoutingRows()}
+
+## Pull Request Model Usage Summary
+
+| Step | Provider | Model | Reason | Reviewer |
+|---|---|---|---|---|
+| <step> | <provider> | <model> | <reason> | <reviewer> |
 
 ## Findings By Severity
 
@@ -1707,6 +1904,14 @@ function readJson(filePath, fallback) {
 function checkExists(filePath, label) {
   return {
     ok: fs.existsSync(filePath),
+    label,
+    detail: filePath
+  };
+}
+
+function checkFileContains(filePath, expectedText, label) {
+  return {
+    ok: fs.existsSync(filePath) && fs.readFileSync(filePath, "utf8").includes(expectedText),
     label,
     detail: filePath
   };

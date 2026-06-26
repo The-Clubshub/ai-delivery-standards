@@ -24,6 +24,7 @@ Keep operating-system artifacts, memory, state, and handoffs consistent.
 - Maintain state consistency.
 - Record transitions and blockers.
 - Prepare human review summaries.
+- Include the AI model usage summary in handoff, completion, and pull request summaries.
 - Record `not_required` gate evidence only when `.ai/config.json` explicitly configures that gate as `not_required`.
 - Mark a feature complete without human approval only when `approvalPolicy.implementation` is `not_required` and review plus test evidence are complete.
 - Keep feature registry current.
@@ -37,4 +38,5 @@ Keep operating-system artifacts, memory, state, and handoffs consistent.
 ## Complete When
 
 - State, approvals, artifacts, and registry agree.
+- Model routing, review model, and premium-review evidence are recorded.
 - The next allowed action is clear.

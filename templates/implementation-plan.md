@@ -15,6 +15,7 @@ source_spec: feature-spec.md
 ## Implementation Rules
 
 - Implement only the approved scope in `feature-spec.md`.
+- Follow `standards/ai-model-routing.md` for every operation.
 - Work operation by operation.
 - Update tests with the operation that changes behavior.
 - Stop and update the spec first if implementation needs to diverge.
@@ -26,13 +27,24 @@ source_spec: feature-spec.md
 - [ ] Feature spec reviewed.
 - [ ] Test plan reviewed.
 - [ ] Relevant standards identified.
+- [ ] AI model routing declared before work starts.
 - [ ] Required secrets, services, test data, and environments are available.
+
+## AI Model Routing
+
+Every operation must include an `ai_provider` block that follows `standards/ai-model-routing.md`.
+
+| Step | Provider | Model | Reason | Reviewer |
+|---|---|---|---|---|
+| Planning | OpenAI | GPT-5.5 | Architecture/product reasoning | N/A |
+| Implementation | Z.ai | GLM-5.2 | Bulk code generation | GPT-5.5 |
+| Review | OpenAI | GPT-5.5 | Final QA | N/A |
 
 ## Operation Plan
 
-| Step | Status | Operation | Files Or Modules | Tests | Notes |
-| --- | --- | --- | --- | --- | --- |
-| 1 | Not started | `<operation>` | `<files>` | `<tests>` | `<notes>` |
+| Step | Status | Operation | Provider | Model | Reviewer | Files Or Modules | Tests | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Not started | `<operation>` | `<provider>` | `<model>` | `<reviewer>` | `<files>` | `<tests>` | `<notes>` |
 
 Status values: `Not started`, `In progress`, `Blocked`, `Done`, `Deferred`.
 
@@ -41,6 +53,17 @@ Status values: `Not started`, `In progress`, `Blocked`, `Done`, `Deferred`.
 ### Operation 1: `<name>`
 
 **Purpose:** `<why this step exists>`
+
+**AI Provider:**
+
+```yaml
+ai_provider:
+  provider: openai | zai | anthropic | other
+  model: gpt-5.5 | glm-5.2 | other
+  reason: <short explanation>
+  fallback_model: <optional backup model>
+  requires_premium_review: false
+```
 
 **Inputs:**
 
@@ -101,8 +124,9 @@ Status values: `Not started`, `In progress`, `Blocked`, `Done`, `Deferred`.
 ## Completion Checklist
 
 - [ ] All operations complete or explicitly deferred.
+- [ ] AI model routing was followed for every operation.
+- [ ] Any GLM-5.2 work touching auth, billing, payments, migrations, permissions, or customer data received GPT-5.5 review.
 - [ ] Tests added or updated.
 - [ ] Validation commands pass.
 - [ ] Review checklist completed.
 - [ ] Specs synchronized with final implementation.
-

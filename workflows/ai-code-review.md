@@ -24,6 +24,7 @@ Read:
 - Feature spec.
 - Implementation plan.
 - Test plan.
+- AI model routing from the plan and review artifact.
 
 Identify what the code is supposed to do before looking at implementation details.
 
@@ -50,6 +51,7 @@ Check:
 Apply relevant standards:
 
 - `standards/engineering.md`
+- `standards/ai-model-routing.md`
 - `standards/frontend.md`
 - `standards/backend.md`
 - `standards/ui-ux.md`
@@ -85,7 +87,17 @@ Look for:
 - Unapproved dependencies.
 - False comments that do not match behavior.
 
-### 7. Review Spec-Code Sync
+### 7. Review AI Model Routing
+
+Check:
+
+- Every delivery step has `ai_provider`.
+- GLM-5.2 did not make final architecture, auth, billing, database, or security decisions.
+- GPT-5.5 reviewed GLM-5.2 work touching auth, billing, payments, migrations, permissions, or customer data.
+- The final review model is equal or stronger than the implementation model.
+- The pull request includes a model usage summary.
+
+### 8. Review Spec-Code Sync
 
 If code differs from specs:
 
@@ -93,7 +105,7 @@ If code differs from specs:
 - Change code if the difference is drift.
 - Add tests for the final decision.
 
-### 8. Run Self-Review And Critic Review
+### 9. Run Self-Review And Critic Review
 
 For AI-generated implementation work, record both:
 
@@ -104,7 +116,7 @@ Apply fixes only when they improve correctness, maintainability, security, acces
 
 For autonomous feature queue work, stop after acceptance criteria pass or after two review/fix cycles.
 
-### 9. Record Findings
+### 10. Record Findings
 
 Prioritize findings:
 
@@ -137,5 +149,6 @@ Update review-checklist.md with findings and validation evidence.
 - [ ] Scope is controlled.
 - [ ] Acceptance criteria are covered.
 - [ ] Generated-code risks are checked.
+- [ ] AI model routing is checked.
 - [ ] Specs are synchronized.
 - [ ] Findings are recorded by severity.

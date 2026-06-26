@@ -15,12 +15,13 @@ workflow: autonomous-feature-queue
 - Continue automatically to the next unblocked feature.
 - Ask the user only when a stop condition in `workflows/autonomous-feature-queue.md` applies.
 - Stop revising a feature after acceptance criteria pass or two review/fix cycles complete.
+- Declare AI model routing before starting each queued feature.
 
 ## Feature Queue
 
-| Order | Feature ID | Feature | Status | Objective | Acceptance Criteria Summary | Dependencies | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `FEA-000` | `<feature>` | Queued | `<objective>` | `<criteria>` | `<dependencies>` | `<notes>` |
+| Order | Feature ID | Feature | Status | Provider | Model | Objective | Acceptance Criteria Summary | Dependencies | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `FEA-000` | `<feature>` | Queued | `<provider>` | `<model>` | `<objective>` | `<criteria>` | `<dependencies>` | `<notes>` |
 
 ## Current Feature
 
@@ -30,6 +31,9 @@ workflow: autonomous-feature-queue
 | Feature | `<name>` |
 | Objective | `<objective>` |
 | Acceptance Criteria | `<summary>` |
+| AI Provider | `<provider>` |
+| AI Model | `<model>` |
+| Premium Review Required | `<true/false>` |
 | Started | `<date/time>` |
 | Review/Fix Cycle | `0 of 2` |
 

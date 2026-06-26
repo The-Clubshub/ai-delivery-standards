@@ -17,6 +17,27 @@ updated: YYYY-MM-DD
 - [ ] Implementation plan exists and reflects completed work.
 - [ ] Test plan exists and reflects executed validation.
 - [ ] ADRs exist for long-lived architecture decisions.
+- [ ] AI model routing is declared for every delivery step.
+
+## AI Model Routing
+
+- [ ] Every step has an `ai_provider` field with provider, model, reason, and `requires_premium_review`.
+- [ ] GLM-5.2 did not make final architecture, auth, billing, database, or security decisions.
+- [ ] Any GLM-5.2 work touching auth, billing, payments, migrations, permissions, or customer data received GPT-5.5 review.
+- [ ] Final review model is equal or stronger than the implementation model.
+- [ ] Pull request includes the model usage summary below.
+
+| Step | Provider | Model | Reason | Reviewer |
+|---|---|---|---|---|
+| Planning | OpenAI | GPT-5.5 | Architecture/product reasoning | N/A |
+| Implementation | Z.ai | GLM-5.2 | Bulk code generation | GPT-5.5 |
+| Review | OpenAI | GPT-5.5 | Final QA | N/A |
+
+## Pull Request Model Usage Summary
+
+| Step | Provider | Model | Reason | Reviewer |
+|---|---|---|---|---|
+| `<step>` | `<provider>` | `<model>` | `<reason>` | `<reviewer>` |
 
 ## Intent And Scope
 

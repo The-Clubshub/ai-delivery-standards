@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-delivery-standards.local/schemas/model-routing.schema.json",
+  "title": "AI Delivery Model Routing",
+  "type": "object",
+  "required": ["ai_provider"],
+  "properties": {
+    "ai_provider": { "$ref": "#/$defs/aiProvider" },
+    "model_routing": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/aiProvider" }
+    }
+  },
+  "$defs": {
+    "aiProvider": {
+      "type": "object",
+      "required": ["provider", "model", "reason", "requires_premium_review"],
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["openai", "zai", "anthropic", "other"]
+        },
+        "model": {
+          "type": "string",
+          "enum": ["gpt-5.5", "glm-5.2", "other"]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fallback_model": {
+          "type": "string"
+        },
+        "requires_premium_review": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

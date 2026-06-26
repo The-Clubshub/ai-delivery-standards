@@ -52,6 +52,7 @@ Use `templates/feature-queue.md` for the queue log.
 - Prefer dependency order first, then smallest safe feature, then highest user value.
 - Do not bundle unrelated feature implementations into one diff unless the specs share the same operation.
 - Keep each feature's artifacts synchronized before moving to the next feature.
+- Declare AI model routing for each feature before implementation starts.
 
 ## Stop Conditions
 
@@ -78,6 +79,7 @@ Before editing code for the feature, record:
 - Scope out.
 - Dependencies on earlier queue items.
 - Assumptions that are safe enough to proceed.
+- AI provider, model, reason, fallback model if any, and premium-review status.
 
 The restatement should live in the feature spec and, when useful, in the queue log.
 
@@ -88,6 +90,7 @@ Implement the narrowest change that satisfies the acceptance criteria.
 Rules:
 
 - Follow the implementation plan operation by operation.
+- Follow each operation's `ai_provider` routing.
 - Prefer existing project patterns and helpers.
 - Add abstractions only when they remove real complexity or match existing architecture.
 - Avoid opportunistic redesign, dependency additions, analytics, notifications, permissions, or UI paths not required by the spec.
@@ -220,6 +223,7 @@ Process:
 
 - [ ] Feature queue is explicit and ordered.
 - [ ] Each feature has required artifacts.
+- [ ] Each feature has AI model routing before implementation.
 - [ ] Acceptance criteria are testable.
 - [ ] Each completed feature has validation evidence.
 - [ ] Self-review is recorded.

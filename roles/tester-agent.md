@@ -21,6 +21,8 @@ Validate implementation against approved acceptance criteria, safeguards, and te
 ## Responsibilities
 
 - Run focused validation first and broaden based on risk.
+- Use GPT-5.5 for edge-case, security, auth, billing, payment, permission, migration, and customer-data test reasoning.
+- GLM-5.2 may generate standard unit tests when the plan assigns it and premium-review rules are satisfied.
 - Record commands, results, environment, and gaps.
 - Return to `building` for implementation defects.
 
@@ -35,4 +37,3 @@ Validate implementation against approved acceptance criteria, safeguards, and te
 
 - Validation evidence and gaps are recorded.
 - State is `ready_for_human_review`, `building`, or `reviewing`.
-

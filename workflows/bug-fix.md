@@ -47,6 +47,7 @@ Include:
 - Root cause.
 - Fix scope.
 - Regression test plan.
+- AI model routing for root cause analysis, implementation, tests, and review.
 - Rollout and monitoring.
 
 ### 4. Check Related Feature Specs
@@ -68,6 +69,7 @@ If the implementation simply violates the spec:
 Rules:
 
 - Fix the root cause, not only the symptom.
+- Follow the declared `ai_provider` routing.
 - Avoid unrelated refactors.
 - Add a regression test that would have caught the bug.
 - Preserve existing public behavior unless a spec update approves a change.
@@ -114,6 +116,7 @@ Process:
 - [ ] Bugfix spec exists.
 - [ ] Root cause is documented.
 - [ ] Fix scope is minimal.
+- [ ] AI model routing is declared and followed.
 - [ ] Regression test exists or gap is documented.
 - [ ] Related specs are updated if behavior changed.
 - [ ] Validation evidence is recorded.

@@ -18,6 +18,7 @@ source_spec: feature-spec.md
 - Do not add general chat, web search, ticket creation, or action execution.
 - Keep the classifier, retriever, generator, and validator separately testable.
 - Enforce all safeguards server-side.
+- Follow `standards/ai-model-routing.md` for every operation.
 - Sync specs before merge if contracts or behavior change.
 
 ## Preconditions
@@ -27,21 +28,31 @@ source_spec: feature-spec.md
 - [ ] Authentication and tenant context helpers exist.
 - [ ] JSON schema validation library is approved.
 - [ ] AI model provider and timeout settings are approved.
+- [ ] AI model routing is declared before work starts.
 - [ ] Feature flag service is available.
+
+## AI Model Routing
+
+| Step | Provider | Model | Reason | Reviewer |
+|---|---|---|---|---|
+| Planning | OpenAI | GPT-5.5 | AI behavior, security, and product reasoning | N/A |
+| Implementation | Z.ai | GLM-5.2 | Bounded code generation from approved plan | GPT-5.5 |
+| Security-sensitive implementation | OpenAI | GPT-5.5 | Auth, tenant, permission, and customer-data boundaries | GPT-5.5 |
+| Review | OpenAI | GPT-5.5 | Final QA and safety gate | N/A |
 
 ## Operation Plan
 
-| Step | Status | Operation | Files Or Modules | Tests | Notes |
-| --- | --- | --- | --- | --- | --- |
-| 1 | Not started | Define response schema and validation helper | `assistant/schema` | Schema unit tests | Must validate answer, refusal, clarification |
-| 2 | Not started | Implement intent classifier interface | `assistant/classifier` | Classifier unit and eval tests | Labels: in_scope, out_of_scope, ambiguous, unsafe |
-| 3 | Not started | Implement permission-scoped retriever | `assistant/retriever` | Integration tests with tenant fixtures | Filter by published status and visibility |
-| 4 | Not started | Implement evidence gate | `assistant/evidenceGate` | Low-score and empty evidence tests | Refuse below threshold |
-| 5 | Not started | Implement grounded generator | `assistant/generator` | Grounding, citation, invalid JSON tests | Use retrieved chunks only |
-| 6 | Not started | Add assistant API endpoint | `POST /api/help-assistant/messages` | API contract and auth tests | Rate limited |
-| 7 | Not started | Add help assistant UI panel | `HelpAssistantPanel` | Component and accessibility tests | Feature flag protected |
-| 8 | Not started | Add observability | logging, metrics, tracing helpers | Redaction and metric tests | No raw prompt logs |
-| 9 | Not started | Add AI evaluation suite | `evals/help-assistant` | Golden eval command | Run in CI or scheduled job |
+| Step | Status | Operation | Provider | Model | Reviewer | Files Or Modules | Tests | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Not started | Define response schema and validation helper | Z.ai | GLM-5.2 | GPT-5.5 | `assistant/schema` | Schema unit tests | Must validate answer, refusal, clarification |
+| 2 | Not started | Implement intent classifier interface | OpenAI | GPT-5.5 | GPT-5.5 | `assistant/classifier` | Classifier unit and eval tests | Classification affects safety boundary |
+| 3 | Not started | Implement permission-scoped retriever | OpenAI | GPT-5.5 | GPT-5.5 | `assistant/retriever` | Integration tests with tenant fixtures | Filter by published status and visibility |
+| 4 | Not started | Implement evidence gate | OpenAI | GPT-5.5 | GPT-5.5 | `assistant/evidenceGate` | Low-score and empty evidence tests | Refuse below threshold |
+| 5 | Not started | Implement grounded generator | OpenAI | GPT-5.5 | GPT-5.5 | `assistant/generator` | Grounding, citation, invalid JSON tests | Use retrieved chunks only |
+| 6 | Not started | Add assistant API endpoint | OpenAI | GPT-5.5 | GPT-5.5 | `POST /api/help-assistant/messages` | API contract and auth tests | Rate limited |
+| 7 | Not started | Add help assistant UI panel | Z.ai | GLM-5.2 | GPT-5.5 | `HelpAssistantPanel` | Component and accessibility tests | Feature flag protected |
+| 8 | Not started | Add observability | Z.ai | GLM-5.2 | GPT-5.5 | logging, metrics, tracing helpers | Redaction and metric tests | No raw prompt logs |
+| 9 | Not started | Add AI evaluation suite | OpenAI | GPT-5.5 | GPT-5.5 | `evals/help-assistant` | Golden eval command | Run in CI or scheduled job |
 
 ## Detailed Operations
 
@@ -292,4 +303,3 @@ source_spec: feature-spec.md
 - [ ] Validation commands pass.
 - [ ] Review checklist completed.
 - [ ] Specs synchronized with final implementation.
-

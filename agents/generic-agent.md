@@ -31,6 +31,17 @@ Required bugfix artifact:
 
 - `bugfix-spec.md`
 
+## AI Model Routing
+
+Every task plan and delivery step must declare `ai_provider` before work starts, following `standards/ai-model-routing.md`.
+
+- Planning, architecture, database schema, edge-case tests, code review, security review, auth, billing, payments, and marketing copy default to OpenAI GPT-5.5.
+- Implementation, refactoring, standard unit tests, and low-risk documentation may use Z.ai GLM-5.2.
+- GLM-5.2 may implement code but must not make final architecture, auth, billing, database, or security decisions.
+- Any GLM-5.2 implementation touching auth, billing, payments, migrations, permissions, or customer data must receive GPT-5.5 review before merge.
+- Pull requests and handoffs must include the model usage summary table.
+- Missing model routing fails standards validation.
+
 ## Trivial Versus Non-Trivial Work
 
 Trivial work can proceed without creating the full feature artifact set when it does not change runtime behavior, public contracts, security posture, data, accessibility, or user-visible workflow.
@@ -137,6 +148,7 @@ Before editing code:
 - Confirm required artifacts exist.
 - Confirm the feature spec has acceptance criteria.
 - Confirm the implementation plan has ordered operations.
+- Confirm every operation declares `ai_provider`.
 - Confirm the test plan covers normal, boundary, negative, and regression cases.
 - Identify relevant standards.
 

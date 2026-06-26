@@ -100,6 +100,8 @@ After the requirements gate is satisfied, the Planner Agent fills:
 
 The plan must include ordered operations, expected files or modules where known, validation, rollback, dependencies, configuration, security, accessibility, observability, and rollout notes.
 
+The plan must also include AI model routing for every operation using `standards/ai-model-routing.md`. Missing routing blocks the plan gate.
+
 ### 5. Plan Review
 
 Move to `plan_pending_review` when the implementation plan and test plan are ready.
@@ -121,6 +123,7 @@ The Builder Agent may build only when state is `plan_approved`.
 Rules:
 
 - Implement only gated operations.
+- Follow the operation's declared `ai_provider`.
 - Work operation by operation.
 - Keep changes narrow.
 - Add or update tests with behavior changes.
@@ -135,6 +138,7 @@ The Reviewer Agent reviews implementation against:
 - Tests.
 - Security, accessibility, performance, observability, API, frontend, backend, and engineering standards.
 - Generated-code risks.
+- AI model routing, including premium-review requirements.
 
 Material findings return the feature to `building`.
 
@@ -183,6 +187,7 @@ Completion records implementation gate evidence in `approval.md`, mirrors it in 
 - [ ] V2 feature folder exists.
 - [ ] Requirements gate is satisfied before planning.
 - [ ] Plan gate is satisfied before building.
+- [ ] AI model routing exists for every delivery step.
 - [ ] Review stage completed.
 - [ ] Testing stage completed or gaps accepted.
 - [ ] Implementation gate is satisfied before `complete`.

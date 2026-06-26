@@ -298,6 +298,7 @@ Define the executable implementation steps.
 Required standards:
 
 - `standards/engineering.md`
+- `standards/ai-model-routing.md`
 - `standards/frontend.md`
 - `standards/backend.md`
 - `standards/ui-ux.md`
@@ -347,4 +348,3 @@ Define non-negotiable boundaries.
 - Engineering approval: Example approved
 - Security approval: Required for production
 - Accessibility approval: Required for production UI
-

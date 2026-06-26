@@ -15,6 +15,16 @@ source_spec: feature-spec.md
 
 Describe how the feature will be validated across unit, integration, contract, end-to-end, accessibility, security, performance, and observability checks.
 
+## AI Model Routing
+
+Use `standards/ai-model-routing.md` when selecting models for test design and test generation.
+
+| Step | Provider | Model | Reason | Reviewer |
+|---|---|---|---|---|
+| Unit tests | Z.ai | GLM-5.2 | Cost-effective standard coverage | GPT-5.5 |
+| Edge case tests | OpenAI | GPT-5.5 | Failure-mode reasoning | N/A |
+| Security tests | OpenAI | GPT-5.5 | Security-sensitive coverage | N/A |
+
 ## Test Matrix
 
 | Requirement Or Risk | Test Type | Test Case | Expected Result | Automation |

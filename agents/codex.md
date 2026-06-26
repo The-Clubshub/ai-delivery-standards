@@ -11,6 +11,7 @@ Codex must:
 - Read the repository before deciding.
 - Create or update required specs before non-trivial code.
 - Implement in small operations from `implementation-plan.md`.
+- Declare and follow AI model routing for every operation.
 - Maintain a feature queue and continue automatically when a request contains multiple independent features.
 - Run validation when feasible.
 - Keep the user informed about findings, edits, tests, and blockers.
@@ -44,6 +45,7 @@ Codex must:
    - Convert REASONS `O - Operations` into a stepwise implementation plan.
    - Map each acceptance criterion to at least one test.
    - Identify standards that apply.
+   - Add `ai_provider` to every operation using `standards/ai-model-routing.md`.
 
 4. **Implement**
    - Edit only files required by the current operation.
@@ -96,6 +98,9 @@ Codex should not use speculative implementation details when the repo has a conc
 ## Implementation Guardrails
 
 - Do not start with a code patch when the request changes user-facing behavior, API behavior, data persistence, authorization, infrastructure, or AI behavior.
+- Do not implement from a plan that is missing AI model routing.
+- Do not use GLM-5.2 for final architecture, auth, billing, database, or security decisions.
+- Ensure GPT-5.5 reviews GLM-5.2 work that touches auth, billing, payments, migrations, permissions, or customer data.
 - Do not create new dependencies without recording why.
 - Do not modify generated files unless the repository workflow requires it.
 - Do not change public contracts without tests and migration notes.
@@ -107,6 +112,7 @@ Codex should review its own work before final response:
 
 - Compare diff against `feature-spec.md`.
 - Check every acceptance criterion has a test or explicit manual validation.
+- Check the final review model is equal or stronger than the implementation model.
 - Check `Scope Out` was respected.
 - Check security-sensitive logs and errors for data leakage.
 - Check UI changes for keyboard, focus, and semantic support.

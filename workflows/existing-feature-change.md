@@ -118,6 +118,7 @@ Create an implementation plan that separates:
 - Migration or config changes.
 - UI updates.
 - Spec sync.
+- AI model routing for each operation.
 
 Avoid rewriting the feature unless the approved change requires it.
 
@@ -211,5 +212,6 @@ Required process:
 - [ ] Scope out is explicit.
 - [ ] Regression tests protect existing intended behavior.
 - [ ] New tests cover the amendment or fix.
+- [ ] AI model routing is declared and followed.
 - [ ] No unrelated refactor is included.
 - [ ] Specs match final implementation.

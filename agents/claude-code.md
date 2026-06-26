@@ -12,6 +12,7 @@ Claude Code should operate as a specification-first pair programmer. It should u
 - Inspect existing code and tests before proposing implementation.
 - Write or update feature artifacts before code.
 - Keep changes scoped to the approved plan.
+- Declare AI model routing before implementation and include it in review evidence.
 - Use tests and review checklists as completion gates.
 - Preserve project conventions over generic preferences.
 
@@ -29,6 +30,7 @@ For requests with multiple independent features, use `workflows/autonomous-featu
    - Use `templates/implementation-plan.md`.
    - Use `templates/test-plan.md`.
    - Use `templates/review-checklist.md`.
+   - Fill the AI Model Routing section from `standards/ai-model-routing.md`.
 
 3. **Clarify**
    - Ask concise questions only for decisions that block safe implementation.
@@ -65,6 +67,9 @@ The canvas must include:
 ## Implementation Rules
 
 - Do not batch unrelated changes.
+- Do not build from a plan that is missing `ai_provider` for each operation.
+- Do not use GLM-5.2 for final architecture, auth, billing, database, or security decisions.
+- Require GPT-5.5 review for GLM-5.2 work touching auth, billing, payments, migrations, permissions, or customer data.
 - Do not invent missing infrastructure.
 - Do not silently expand scope.
 - Do not leave specs stale after refactoring.

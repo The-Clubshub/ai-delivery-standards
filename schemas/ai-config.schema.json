@@ -25,6 +25,10 @@
         "implementation": { "$ref": "#/$defs/approvalGatePolicy" }
       }
     },
+    "modelRouting": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/aiProvider" }
+    },
     "requiredFeatureArtifacts": {
       "type": "array",
       "items": { "type": "string" }
@@ -35,6 +39,24 @@
       "type": "string",
       "enum": ["human_required", "not_required"],
       "description": "human_required requires explicit human approval; not_required lets the responsible agent advance after required artifacts and evidence are ready."
+    },
+    "aiProvider": {
+      "type": "object",
+      "required": ["provider", "model", "reason", "requires_premium_review"],
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["openai", "zai", "anthropic", "other"]
+        },
+        "model": {
+          "type": "string",
+          "enum": ["gpt-5.5", "glm-5.2", "other"]
+        },
+        "reason": { "type": "string", "minLength": 1 },
+        "fallback_model": { "type": "string" },
+        "requires_premium_review": { "type": "boolean" }
+      }
     }
   }
 }

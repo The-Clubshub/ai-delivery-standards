@@ -66,6 +66,25 @@ Describe the defect, affected users, impact, and expected correction.
 
 - `<not part of this fix>`
 
+## AI Model Routing
+
+| Step | Provider | Model | Reason | Reviewer |
+|---|---|---|---|---|
+| Root cause analysis | OpenAI | GPT-5.5 | Failure-mode reasoning | N/A |
+| Minimal fix | Z.ai | GLM-5.2 | Bounded code correction | GPT-5.5 |
+| Review | OpenAI | GPT-5.5 | Final QA and blast-radius check | N/A |
+
+```yaml
+ai_provider:
+  provider: zai
+  model: glm-5.2
+  reason: minimal implementation after root-cause analysis
+  fallback_model: gpt-5.5
+  requires_premium_review: false
+```
+
+Set `requires_premium_review: true` and use GPT-5.5 review when the fix touches auth, billing, payments, migrations, permissions, or customer data.
+
 ## Safeguards
 
 - [ ] Fix does not weaken security, authorization, privacy, or accessibility.
@@ -95,4 +114,3 @@ Describe the defect, affected users, impact, and expected correction.
 - [ ] Regression test added.
 - [ ] Relevant specs updated.
 - [ ] Validation evidence recorded.
-
