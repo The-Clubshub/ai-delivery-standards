@@ -3,7 +3,7 @@
   "$id": "https://ai-delivery-standards.local/schemas/ai-config.schema.json",
   "title": "AI Delivery V2 Config",
   "type": "object",
-  "required": ["operatingSystemVersion", "standardsPath", "aiPath", "featurePath", "approvalPolicy"],
+  "required": ["operatingSystemVersion", "standardsPath", "aiPath", "featurePath", "approvalPolicy", "modelRouting"],
   "properties": {
     "operatingSystemVersion": { "const": "v2" },
     "standardsVersion": { "type": "string" },
@@ -25,10 +25,7 @@
         "implementation": { "$ref": "#/$defs/approvalGatePolicy" }
       }
     },
-    "modelRouting": {
-      "type": "object",
-      "additionalProperties": { "$ref": "#/$defs/aiProvider" }
-    },
+    "modelRouting": { "$ref": "#/$defs/routingMatrix" },
     "requiredFeatureArtifacts": {
       "type": "array",
       "items": { "type": "string" }
@@ -39,6 +36,38 @@
       "type": "string",
       "enum": ["human_required", "not_required"],
       "description": "human_required requires explicit human approval; not_required lets the responsible agent advance after required artifacts and evidence are ready."
+    },
+    "routingMatrix": {
+      "type": "object",
+      "required": [
+        "product_strategy",
+        "architecture",
+        "database_schema",
+        "implementation",
+        "refactoring",
+        "unit_tests",
+        "edge_case_tests",
+        "code_review",
+        "security_review",
+        "auth_billing_payments",
+        "documentation",
+        "marketing_copy"
+      ],
+      "additionalProperties": { "$ref": "#/$defs/aiProvider" },
+      "properties": {
+        "product_strategy": { "$ref": "#/$defs/aiProvider" },
+        "architecture": { "$ref": "#/$defs/aiProvider" },
+        "database_schema": { "$ref": "#/$defs/aiProvider" },
+        "implementation": { "$ref": "#/$defs/aiProvider" },
+        "refactoring": { "$ref": "#/$defs/aiProvider" },
+        "unit_tests": { "$ref": "#/$defs/aiProvider" },
+        "edge_case_tests": { "$ref": "#/$defs/aiProvider" },
+        "code_review": { "$ref": "#/$defs/aiProvider" },
+        "security_review": { "$ref": "#/$defs/aiProvider" },
+        "auth_billing_payments": { "$ref": "#/$defs/aiProvider" },
+        "documentation": { "$ref": "#/$defs/aiProvider" },
+        "marketing_copy": { "$ref": "#/$defs/aiProvider" }
+      }
     },
     "aiProvider": {
       "type": "object",

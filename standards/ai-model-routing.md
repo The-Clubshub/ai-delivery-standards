@@ -29,56 +29,74 @@ Use `other` only when the concrete provider or model is named in `reason` and th
 
 ## Routing Matrix
 
+Every project-level `model_routing` or `modelRouting` matrix must include these routes. Each route uses the same provider/model/reason/review shape as `ai_provider`; `fallback_model` is optional, but `requires_premium_review` is required so validation can fail closed.
+
 ```yaml
 model_routing:
   product_strategy:
     provider: openai
     model: gpt-5.5
     reason: high-level reasoning and product judgement
+    requires_premium_review: true
   architecture:
     provider: openai
     model: gpt-5.5
     reason: structural decisions have high long-term cost
+    requires_premium_review: true
   database_schema:
     provider: openai
     model: gpt-5.5
     reason: schema mistakes are expensive to reverse
+    requires_premium_review: true
   implementation:
     provider: zai
     model: glm-5.2
     reason: cost-effective for bulk coding
+    fallback_model: gpt-5.5
+    requires_premium_review: false
   refactoring:
     provider: zai
     model: glm-5.2
     reason: good for repetitive code changes
+    fallback_model: gpt-5.5
+    requires_premium_review: false
   unit_tests:
     provider: zai
     model: glm-5.2
     reason: cost-effective for standard test coverage
+    fallback_model: gpt-5.5
+    requires_premium_review: false
   edge_case_tests:
     provider: openai
     model: gpt-5.5
     reason: better reasoning around failure modes
+    requires_premium_review: false
   code_review:
     provider: openai
     model: gpt-5.5
     reason: final quality gate
+    requires_premium_review: false
   security_review:
     provider: openai
     model: gpt-5.5
     reason: security-sensitive work must use strongest reviewer
+    requires_premium_review: true
   auth_billing_payments:
     provider: openai
     model: gpt-5.5
     reason: high-risk business-critical code
+    requires_premium_review: true
   documentation:
     provider: zai
     model: glm-5.2
     reason: low-risk text generation
+    fallback_model: gpt-5.5
+    requires_premium_review: false
   marketing_copy:
     provider: openai
     model: gpt-5.5
     reason: stronger taste, positioning and brand judgement
+    requires_premium_review: true
 ```
 
 ## Required Delivery Table

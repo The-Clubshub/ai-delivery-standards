@@ -6,12 +6,41 @@
   "required": ["ai_provider"],
   "properties": {
     "ai_provider": { "$ref": "#/$defs/aiProvider" },
-    "model_routing": {
-      "type": "object",
-      "additionalProperties": { "$ref": "#/$defs/aiProvider" }
-    }
+    "model_routing": { "$ref": "#/$defs/routingMatrix" }
   },
   "$defs": {
+    "routingMatrix": {
+      "type": "object",
+      "required": [
+        "product_strategy",
+        "architecture",
+        "database_schema",
+        "implementation",
+        "refactoring",
+        "unit_tests",
+        "edge_case_tests",
+        "code_review",
+        "security_review",
+        "auth_billing_payments",
+        "documentation",
+        "marketing_copy"
+      ],
+      "additionalProperties": { "$ref": "#/$defs/aiProvider" },
+      "properties": {
+        "product_strategy": { "$ref": "#/$defs/aiProvider" },
+        "architecture": { "$ref": "#/$defs/aiProvider" },
+        "database_schema": { "$ref": "#/$defs/aiProvider" },
+        "implementation": { "$ref": "#/$defs/aiProvider" },
+        "refactoring": { "$ref": "#/$defs/aiProvider" },
+        "unit_tests": { "$ref": "#/$defs/aiProvider" },
+        "edge_case_tests": { "$ref": "#/$defs/aiProvider" },
+        "code_review": { "$ref": "#/$defs/aiProvider" },
+        "security_review": { "$ref": "#/$defs/aiProvider" },
+        "auth_billing_payments": { "$ref": "#/$defs/aiProvider" },
+        "documentation": { "$ref": "#/$defs/aiProvider" },
+        "marketing_copy": { "$ref": "#/$defs/aiProvider" }
+      }
+    },
     "aiProvider": {
       "type": "object",
       "required": ["provider", "model", "reason", "requires_premium_review"],

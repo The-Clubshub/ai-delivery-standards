@@ -190,6 +190,8 @@ const DEFAULT_MODEL_ROUTING = {
   }
 };
 
+const REQUIRED_MODEL_ROUTING_KEYS = Object.keys(DEFAULT_MODEL_ROUTING);
+
 main(process.argv.slice(2));
 
 function main(argv) {
@@ -440,6 +442,7 @@ function doctor(argv) {
   checks.push(checkExists(path.join(standardsPath, "templates", "v2", "feature", "requirements.md"), "V2 requirements template"));
   checks.push(checkExists(path.join(standardsPath, "standards", "ai-model-routing.md"), "AI model routing standard"));
   checks.push(checkExists(path.join(standardsPath, "standards", "accessibility.md"), "accessibility standards"));
+  checks.push(...checkModelRouting(config.modelRouting));
   checks.push(checkExists(path.join(docsPath, "ai-delivery.md"), "product AI delivery guide"));
   checks.push(checkExists(path.join(docsPath, "architecture", "overview.md"), "architecture overview"));
   checks.push(checkExists(path.join(target, config.decisionPath || path.posix.join(config.aiPath || DEFAULT_AI_PATH, "decisions")), "architecture decisions folder"));
@@ -1899,6 +1902,40 @@ function readConfig(target) {
 function readJson(filePath, fallback) {
   if (!fs.existsSync(filePath)) return fallback;
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function checkModelRouting(modelRouting) {
+  const checks = [
+    {
+      ok: modelRouting && typeof modelRouting === "object" && !Array.isArray(modelRouting),
+      label: "V2 config model routing matrix",
+      detail: ".ai/config.json modelRouting"
+    }
+  ];
+
+  for (const routeKey of REQUIRED_MODEL_ROUTING_KEYS) {
+    const route = modelRouting && modelRouting[routeKey];
+    const routePresent = route && typeof route === "object" && !Array.isArray(route);
+    checks.push({
+      ok: routePresent,
+      label: `model routing route ${routeKey}`,
+      detail: ".ai/config.json modelRouting"
+    });
+
+    if (routePresent) {
+      const missingFields = ["provider", "model", "reason", "requires_premium_review"]
+        .filter((field) => route[field] === undefined || route[field] === "");
+      checks.push({
+        ok: missingFields.length === 0,
+        label: `model routing route ${routeKey} required fields`,
+        detail: missingFields.length > 0
+          ? `missing ${missingFields.join(", ")}`
+          : ".ai/config.json modelRouting"
+      });
+    }
+  }
+
+  return checks;
 }
 
 function checkExists(filePath, label) {
