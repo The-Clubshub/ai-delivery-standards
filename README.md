@@ -219,6 +219,9 @@ It creates:
   STANDARDS.json
   STANDARDS_CHECKLIST.md
   BUILDER_PROMPT.md
+  REVIEWER_PROMPT.md
+  BUILDER_OUTPUT.md
+  REVIEWER_OUTPUT.md
   ACTIVITY.md
   artifacts/
     logs/
@@ -251,8 +254,29 @@ You can connect an external agent command:
 ai-delivery loop init \
   --spec SPEC.md \
   --standards AI_STANDARDS.md \
-  --builder-command "codex exec --auto {prompt}" \
+  --builder-command "codex exec {codexConfigArgs} -o {output} {prompt}" \
+  --reviewer-command "codex exec {reviewerCodexConfigArgs} -o {output} {prompt}" \
   --verify "npm run check" \
+  --autonomy-tier 2
+```
+
+External builder and reviewer commands can use model-routing placeholders from each task's `ai_provider` and `ai_reviewer`:
+
+| Placeholder | Purpose |
+| --- | --- |
+| `{provider}` / `{model}` | Semantic provider and model for the active command role. |
+| `{executionProvider}` / `{executionModel}` | Concrete runner provider and model, such as `openrouter` and `z-ai/glm-5.2`. |
+| `{codexConfigArgs}` | Codex-ready provider/profile/model args for the active route. |
+| `{reviewerCodexConfigArgs}` | Codex-ready args for the reviewer route. |
+| `{prompt}` / `{output}` | Generated prompt file and optional command output file. |
+
+For Codex with OpenRouter fallback, use `{codexConfigArgs}`. For other runners, use their own model flag, for example:
+
+```bash
+ai-delivery loop init \
+  --spec SPEC.md \
+  --standards AI_STANDARDS.md \
+  --builder-command "claude --model {executionModel} < {prompt}" \
   --autonomy-tier 2
 ```
 

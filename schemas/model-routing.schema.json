@@ -63,6 +63,41 @@
         },
         "requires_premium_review": {
           "type": "boolean"
+        },
+        "execution": { "$ref": "#/$defs/executionRoute" }
+      }
+    },
+    "executionRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runner": {
+          "type": "string",
+          "enum": ["codex", "claude", "cursor", "other"]
+        },
+        "provider": {
+          "type": "string",
+          "description": "Concrete runtime provider id, for example openai, openrouter, anthropic, or a local provider id."
+        },
+        "model": {
+          "type": "string",
+          "description": "Concrete runtime model id, for example z-ai/glm-5.2 or claude-sonnet-4-5."
+        },
+        "profile": {
+          "type": "string",
+          "description": "Optional runner profile name, for example Codex profile openrouter."
+        },
+        "codex_provider": {
+          "type": "string",
+          "description": "Optional Codex-specific provider override."
+        },
+        "codex_model": {
+          "type": "string",
+          "description": "Optional Codex-specific model override."
+        },
+        "codex_profile": {
+          "type": "string",
+          "description": "Optional Codex-specific profile override."
         }
       }
     }

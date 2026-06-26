@@ -21,11 +21,46 @@ ai_provider:
   reason: short explanation
   fallback_model: optional backup model
   requires_premium_review: true | false
+  execution:
+    runner: codex | claude | cursor | other
+    provider: optional runtime provider id
+    model: optional runtime model id
+    profile: optional runner profile
 ```
 
 `provider`, `model`, `reason`, and `requires_premium_review` are required. `fallback_model` is optional but should be present when delivery can continue with a different model after provider outage, rate limit, or budget exhaustion.
 
 Use `other` only when the concrete provider or model is named in `reason` and the step still satisfies the risk rules in this standard.
+
+`execution` is optional and maps the standard routing decision to a concrete runner command. Use it when the delivery runner needs a provider-specific model slug, profile, or command target. For example, a semantic Z.ai route can execute through Codex using an OpenRouter profile:
+
+```yaml
+ai_provider:
+  provider: zai
+  model: glm-5.2
+  reason: cost-effective for bulk coding
+  fallback_model: gpt-5.5
+  requires_premium_review: false
+  execution:
+    runner: codex
+    provider: openrouter
+    model: z-ai/glm-5.2
+    profile: openrouter
+```
+
+An Anthropic/Claude route can use `provider: anthropic`, `model: other`, and a concrete execution model:
+
+```yaml
+ai_provider:
+  provider: anthropic
+  model: other
+  reason: Claude reviewer requested for long-context implementation critique
+  requires_premium_review: false
+  execution:
+    runner: claude
+    provider: anthropic
+    model: claude-sonnet-4-5
+```
 
 ## Routing Matrix
 
@@ -110,6 +145,43 @@ Task plans, implementation plans, review artifacts, and pull request bodies must
 | Review | OpenAI | GPT-5.5 | Final QA | N/A |
 
 Add or remove rows so the table matches the actual work. If a row uses `GLM-5.2` and touches premium-review areas, the reviewer must be `GPT-5.5`.
+
+## Runtime Command Routing
+
+Loop builder and reviewer commands may use routing placeholders so each step can launch the right runner and model:
+
+| Placeholder | Meaning |
+| --- | --- |
+| `{provider}` | Active semantic provider for the command role. |
+| `{model}` | Active semantic model for the command role. |
+| `{executionProvider}` | Concrete provider id for the command runner. |
+| `{executionModel}` | Concrete model id for the command runner. |
+| `{executionProfile}` | Concrete runner profile, if declared or inferred. |
+| `{codexConfigArgs}` | Codex-ready model/provider arguments for the active route. |
+| `{reviewerProvider}` | Semantic provider for `ai_reviewer`. |
+| `{reviewerModel}` | Semantic model for `ai_reviewer`. |
+| `{reviewerCodexConfigArgs}` | Codex-ready model/provider arguments for the reviewer route. |
+
+Example Codex/OpenRouter builder command:
+
+```bash
+ai-delivery loop init \
+  --spec SPEC.md \
+  --standards AI_STANDARDS.md \
+  --builder-command "codex exec {codexConfigArgs} -o {output} {prompt}" \
+  --reviewer-command "codex exec {reviewerCodexConfigArgs} -o {output} {prompt}"
+```
+
+Example Claude builder command:
+
+```bash
+ai-delivery loop init \
+  --spec SPEC.md \
+  --standards AI_STANDARDS.md \
+  --builder-command "claude --model {executionModel} < {prompt}"
+```
+
+Command routing can enforce model usage only for external commands it launches. A manually operated Desktop thread must still be started with the intended model or profile.
 
 ## Enforcement Rules
 
