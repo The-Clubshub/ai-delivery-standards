@@ -254,13 +254,14 @@ You can connect an external agent command:
 ai-delivery loop init \
   --spec SPEC.md \
   --standards AI_STANDARDS.md \
-  --builder-command "codex exec {codexConfigArgs} -o {output} {prompt}" \
-  --reviewer-command "codex exec {reviewerCodexConfigArgs} -o {output} {prompt}" \
+  --routed-codex \
   --verify "npm run check" \
   --autonomy-tier 2
 ```
 
-External builder and reviewer commands can use model-routing placeholders from each task's `ai_provider` and `ai_reviewer`:
+`--routed-codex` expands to routed Codex builder and reviewer commands that read generated prompt files and launch the model declared by each task's `ai_provider` and `ai_reviewer`. Use it from a Desktop Codex thread when you want the current GPT-5.5 session to orchestrate separate GLM/OpenRouter implementation jobs and GPT-5.5 review jobs.
+
+External builder and reviewer commands can also use model-routing placeholders directly:
 
 | Placeholder | Purpose |
 | --- | --- |

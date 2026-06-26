@@ -1211,7 +1211,7 @@ ${aiModelRoutingRows()}
 
 Missing routing fails standards validation. GPT-5.5 review is required for GLM-5.2-generated work touching auth, billing, payments, migrations, permissions, or customer data.
 
-Loop builder and reviewer commands can use routing placeholders such as \`{provider}\`, \`{model}\`, \`{executionProvider}\`, \`{executionModel}\`, \`{codexConfigArgs}\`, and \`{reviewerCodexConfigArgs}\` to launch the concrete runner/model for each step.
+Use \`ai-delivery loop init --routed-codex\` when a Desktop Codex thread should orchestrate routed Codex exec jobs. Loop builder and reviewer commands can also use routing placeholders such as \`{provider}\`, \`{model}\`, \`{executionProvider}\`, \`{executionModel}\`, \`{codexConfigArgs}\`, and \`{reviewerCodexConfigArgs}\` to launch the concrete runner/model for each step.
 
 ## Universal Commands
 

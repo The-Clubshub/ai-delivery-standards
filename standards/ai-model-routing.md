@@ -168,8 +168,7 @@ Example Codex/OpenRouter builder command:
 ai-delivery loop init \
   --spec SPEC.md \
   --standards AI_STANDARDS.md \
-  --builder-command "codex exec {codexConfigArgs} -o {output} {prompt}" \
-  --reviewer-command "codex exec {reviewerCodexConfigArgs} -o {output} {prompt}"
+  --routed-codex
 ```
 
 Example Claude builder command:
