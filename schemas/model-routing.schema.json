@@ -46,13 +46,28 @@
       "required": ["provider", "model", "reason", "requires_premium_review"],
       "additionalProperties": false,
       "properties": {
+        "route_key": {
+          "type": "string",
+          "description": "Project modelRouting key this route was selected from, for example implementation or security_review."
+        },
         "provider": {
           "type": "string",
-          "enum": ["openai", "zai", "anthropic", "other"]
+          "minLength": 1,
+          "description": "Project-defined provider id. This may name a hosted vendor, local model service, router, or internal AI platform."
         },
         "model": {
           "type": "string",
-          "enum": ["gpt-5.5", "glm-5.2", "other"]
+          "minLength": 1,
+          "description": "Project-defined model id or semantic model route."
+        },
+        "risk_tier": {
+          "type": "string",
+          "enum": ["premium_review", "standard_review", "standard_implementation", "low_risk", "other"]
+        },
+        "strength_rank": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Optional provider-agnostic strength rank. Higher means stronger."
         },
         "reason": {
           "type": "string",
@@ -60,6 +75,10 @@
         },
         "fallback_model": {
           "type": "string"
+        },
+        "reviewer_route": {
+          "type": "string",
+          "description": "Optional modelRouting key that should review this route."
         },
         "requires_premium_review": {
           "type": "boolean"
@@ -77,15 +96,15 @@
         },
         "provider": {
           "type": "string",
-          "description": "Concrete runtime provider id, for example openai, openrouter, anthropic, or a local provider id."
+          "description": "Concrete runtime provider id from project configuration."
         },
         "model": {
           "type": "string",
-          "description": "Concrete runtime model id, for example z-ai/glm-5.2 or claude-sonnet-4-5."
+          "description": "Concrete runtime model id from project configuration."
         },
         "profile": {
           "type": "string",
-          "description": "Optional runner profile name, for example Codex profile openrouter."
+          "description": "Optional runner profile name."
         },
         "codex_provider": {
           "type": "string",

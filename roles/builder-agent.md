@@ -26,8 +26,8 @@ Implement the approved plan operation by operation.
 - Implement one operation at a time.
 - Keep changes narrow and idiomatic.
 - Record deviations immediately.
-- Do not let GLM-5.2 make final architecture, auth, billing, database, or security decisions.
-- Flag any GLM-5.2-generated work touching auth, billing, payments, migrations, permissions, or customer data for GPT-5.5 review before merge.
+- Do not let standard implementation routes make final architecture, auth, billing, database, or security decisions.
+- Flag any standard implementation route work touching auth, billing, payments, migrations, permissions, or customer data for configured premium-review routing before merge.
 - Return to the correct draft state if gated artifacts no longer match reality.
 
 ## Prohibited

@@ -52,7 +52,7 @@ Implement only Operation 2 from implementation-plan.md.
 Constraints:
 - Do not modify files outside the listed targets unless you explain why.
 - Add or update the tests listed for Operation 2.
-- Follow the operation's `ai_provider` routing and record GPT-5.5 review when required.
+- Follow the operation's `ai_provider` routing and record configured premium-review evidence when required.
 - Do not implement later operations.
 - If the codebase requires a different approach, update the plan first.
 ```
@@ -104,8 +104,8 @@ Before accepting Cursor-generated changes:
 - Search for TODOs, console logs, debug code, and unused exports.
 - Run tests or record why they were not run.
 - Verify generated code did not add unapproved dependencies.
-- Verify the final review model is equal or stronger than the implementation model.
-- Verify GPT-5.5 reviewed any GLM-5.2 work touching auth, billing, payments, migrations, permissions, or customer data.
+- Verify the final review route is equal or stronger than the implementation route.
+- Verify configured premium-review routing covered any work touching auth, billing, payments, migrations, permissions, or customer data.
 - Verify specs reflect final code.
 
 ## Hallucination Controls

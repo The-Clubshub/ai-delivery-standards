@@ -90,22 +90,25 @@ const APPROVAL_POLICY_ALIASES = {
 const DEFAULT_AI_MODEL_ROUTING_ROWS = [
   {
     step: "Planning",
-    provider: "OpenAI",
-    model: "GPT-5.5",
+    provider: "Project configured",
+    model: "Premium review route",
+    riskTier: "premium_review",
     reason: "Architecture/product reasoning",
     reviewer: "N/A"
   },
   {
     step: "Implementation",
-    provider: "Z.ai",
-    model: "GLM-5.2",
-    reason: "Bulk code generation",
-    reviewer: "GPT-5.5"
+    provider: "Project configured",
+    model: "Standard implementation route",
+    riskTier: "standard_implementation",
+    reason: "Bounded implementation",
+    reviewer: "Configured review route"
   },
   {
     step: "Review",
-    provider: "OpenAI",
-    model: "GPT-5.5",
+    provider: "Project configured",
+    model: "Review route",
+    riskTier: "standard_review",
     reason: "Final QA",
     reviewer: "N/A"
   }
@@ -113,80 +116,113 @@ const DEFAULT_AI_MODEL_ROUTING_ROWS = [
 
 const DEFAULT_MODEL_ROUTING = {
   product_strategy: {
-    provider: "openai",
-    model: "gpt-5.5",
+    provider: "project-configured",
+    model: "premium-review",
+    risk_tier: "premium_review",
+    strength_rank: 3,
     reason: "high-level reasoning and product judgement",
-    requires_premium_review: true
+    requires_premium_review: true,
+    reviewer_route: "product_strategy"
   },
   architecture: {
-    provider: "openai",
-    model: "gpt-5.5",
+    provider: "project-configured",
+    model: "premium-review",
+    risk_tier: "premium_review",
+    strength_rank: 3,
     reason: "structural decisions have high long-term cost",
-    requires_premium_review: true
+    requires_premium_review: true,
+    reviewer_route: "architecture"
   },
   database_schema: {
-    provider: "openai",
-    model: "gpt-5.5",
+    provider: "project-configured",
+    model: "premium-review",
+    risk_tier: "premium_review",
+    strength_rank: 3,
     reason: "schema mistakes are expensive to reverse",
-    requires_premium_review: true
+    requires_premium_review: true,
+    reviewer_route: "database_schema"
   },
   implementation: {
-    provider: "zai",
-    model: "glm-5.2",
-    reason: "cost-effective for bulk coding",
-    fallback_model: "gpt-5.5",
-    requires_premium_review: false
+    provider: "project-configured",
+    model: "standard-implementation",
+    risk_tier: "standard_implementation",
+    strength_rank: 1,
+    reason: "cost-effective for bounded implementation",
+    fallback_model: "premium-review",
+    requires_premium_review: false,
+    reviewer_route: "code_review"
   },
   refactoring: {
-    provider: "zai",
-    model: "glm-5.2",
+    provider: "project-configured",
+    model: "standard-implementation",
+    risk_tier: "standard_implementation",
+    strength_rank: 1,
     reason: "good for repetitive code changes",
-    fallback_model: "gpt-5.5",
-    requires_premium_review: false
+    fallback_model: "premium-review",
+    requires_premium_review: false,
+    reviewer_route: "code_review"
   },
   unit_tests: {
-    provider: "zai",
-    model: "glm-5.2",
+    provider: "project-configured",
+    model: "standard-implementation",
+    risk_tier: "standard_implementation",
+    strength_rank: 1,
     reason: "cost-effective for standard test coverage",
-    fallback_model: "gpt-5.5",
-    requires_premium_review: false
+    fallback_model: "premium-review",
+    requires_premium_review: false,
+    reviewer_route: "code_review"
   },
   edge_case_tests: {
-    provider: "openai",
-    model: "gpt-5.5",
+    provider: "project-configured",
+    model: "standard-review",
+    risk_tier: "standard_review",
+    strength_rank: 2,
     reason: "better reasoning around failure modes",
     requires_premium_review: false
   },
   code_review: {
-    provider: "openai",
-    model: "gpt-5.5",
+    provider: "project-configured",
+    model: "standard-review",
+    risk_tier: "standard_review",
+    strength_rank: 2,
     reason: "final quality gate",
     requires_premium_review: false
   },
   security_review: {
-    provider: "openai",
-    model: "gpt-5.5",
-    reason: "security-sensitive work must use strongest reviewer",
-    requires_premium_review: true
+    provider: "project-configured",
+    model: "premium-review",
+    risk_tier: "premium_review",
+    strength_rank: 3,
+    reason: "security-sensitive work must use the strongest configured reviewer",
+    requires_premium_review: true,
+    reviewer_route: "security_review"
   },
   auth_billing_payments: {
-    provider: "openai",
-    model: "gpt-5.5",
+    provider: "project-configured",
+    model: "premium-review",
+    risk_tier: "premium_review",
+    strength_rank: 3,
     reason: "high-risk business-critical code",
-    requires_premium_review: true
+    requires_premium_review: true,
+    reviewer_route: "auth_billing_payments"
   },
   documentation: {
-    provider: "zai",
-    model: "glm-5.2",
+    provider: "project-configured",
+    model: "low-risk",
+    risk_tier: "low_risk",
+    strength_rank: 1,
     reason: "low-risk text generation",
-    fallback_model: "gpt-5.5",
+    fallback_model: "standard-review",
     requires_premium_review: false
   },
   marketing_copy: {
-    provider: "openai",
-    model: "gpt-5.5",
+    provider: "project-configured",
+    model: "premium-review",
+    risk_tier: "premium_review",
+    strength_rank: 3,
     reason: "stronger taste, positioning and brand judgement",
-    requires_premium_review: true
+    requires_premium_review: true,
+    reviewer_route: "marketing_copy"
   }
 };
 
@@ -800,17 +836,20 @@ function approvalPolicyJson(approvalPolicy) {
 
 function aiModelRoutingRows(rows = DEFAULT_AI_MODEL_ROUTING_ROWS) {
   return rows
-    .map((row) => `| ${row.step} | ${row.provider} | ${row.model} | ${row.reason} | ${row.reviewer} |`)
+    .map((row) => `| ${row.step} | ${row.provider} | ${row.model} | ${row.riskTier || ""} | ${row.reason} | ${row.reviewer} |`)
     .join("\n");
 }
 
-function aiProviderYaml({ provider = "zai", model = "glm-5.2", reason = "bounded implementation from approved plan", fallbackModel = "gpt-5.5", requiresPremiumReview = false } = {}) {
+function aiProviderYaml({ provider = "project-configured", model = "standard-implementation", riskTier = "standard_implementation", strengthRank = 1, reason = "bounded implementation from approved plan", fallbackModel = "premium-review", requiresPremiumReview = false, reviewerRoute = "code_review" } = {}) {
   const fallbackLine = fallbackModel ? `  fallback_model: ${fallbackModel}\n` : "";
   return `ai_provider:
   provider: ${provider}
   model: ${model}
+  risk_tier: ${riskTier}
+  strength_rank: ${strengthRank}
   reason: ${reason}
-${fallbackLine}  requires_premium_review: ${requiresPremiumReview}`;
+${fallbackLine}  requires_premium_review: ${requiresPremiumReview}
+  reviewer_route: ${reviewerRoute}`;
 }
 
 function updateFeatureRegistry(target, config, featureId, featureName, featureFolderName, options = {}) {
@@ -1004,14 +1043,16 @@ Agents may record human approval after it is given. Agents must never self-appro
 
 Every task plan and delivery step must declare \`ai_provider\` before work starts, following \`${config.standardsPath}/standards/ai-model-routing.md\`.
 
-| Step | Provider | Model | Reason | Reviewer |
-|---|---|---|---|---|
+| Step | Provider | Model | Risk Tier | Reason | Reviewer |
+|---|---|---|---|---|---|
 ${aiModelRoutingRows()}
 
 Rules:
 
-- GLM-5.2 may implement code but must not make final architecture, auth, billing, database, or security decisions.
-- Any GLM-5.2 implementation touching auth, billing, payments, migrations, permissions, or customer data must receive GPT-5.5 review before merge.
+- Concrete provider and model names come from \`${config.aiPath}/config.json\` \`modelRouting\`.
+- Replace \`project-configured\` placeholders with approved concrete provider/model/execution values before relying on routed automation.
+- Standard implementation routes must not make final architecture, auth, billing, database, or security decisions.
+- Work touching auth, billing, payments, migrations, permissions, or customer data must receive configured premium-review routing before merge.
 - Pull requests and handoffs must include a model usage summary.
 - Missing model routing fails standards validation.
 
@@ -1205,11 +1246,11 @@ Role behavior is defined in \`${config.standardsPath}/roles/\`.
 
 Every plan, task, and pull request must include model routing from \`${config.standardsPath}/standards/ai-model-routing.md\`.
 
-| Step | Provider | Model | Reason | Reviewer |
-|---|---|---|---|---|
+| Step | Provider | Model | Risk Tier | Reason | Reviewer |
+|---|---|---|---|---|---|
 ${aiModelRoutingRows()}
 
-Missing routing fails standards validation. GPT-5.5 review is required for GLM-5.2-generated work touching auth, billing, payments, migrations, permissions, or customer data.
+Missing routing fails standards validation. Premium-review routing is required for generated work touching auth, billing, payments, migrations, permissions, or customer data. Replace \`project-configured\` placeholders in \`${config.aiPath}/config.json\` before relying on routed automation.
 
 Use \`ai-delivery loop init --routed-codex\` when a Desktop Codex thread should orchestrate routed Codex exec jobs. Loop builder and reviewer commands can also use routing placeholders such as \`{provider}\`, \`{model}\`, \`{executionProvider}\`, \`{executionModel}\`, \`{codexConfigArgs}\`, and \`{reviewerCodexConfigArgs}\` to launch the concrete runner/model for each step.
 
@@ -1504,8 +1545,8 @@ updated: ${today()}
 
 Every operation must include an \`ai_provider\` block.
 
-| Step | Provider | Model | Reason | Reviewer |
-|---|---|---|---|---|
+| Step | Provider | Model | Risk Tier | Reason | Reviewer |
+|---|---|---|---|---|---|
 ${aiModelRoutingRows()}
 
 ## Operation Plan
@@ -1584,11 +1625,11 @@ Describe how this feature will be validated.
 
 Use \`standards/ai-model-routing.md\` when selecting models for test design and test generation.
 
-| Step | Provider | Model | Reason | Reviewer |
-|---|---|---|---|---|
-| Unit tests | Z.ai | GLM-5.2 | Cost-effective standard coverage | GPT-5.5 |
-| Edge case tests | OpenAI | GPT-5.5 | Failure-mode reasoning | N/A |
-| Security tests | OpenAI | GPT-5.5 | Security-sensitive coverage | N/A |
+| Step | Provider | Model | Risk Tier | Reason | Reviewer |
+|---|---|---|---|---|---|
+| Unit tests | <provider> | <model> | standard_implementation | Cost-effective standard coverage | <code_review route> |
+| Edge case tests | <provider> | <model> | standard_review | Failure-mode reasoning | N/A |
+| Security tests | <provider> | <model> | premium_review | Security-sensitive coverage | N/A |
 
 ## Acceptance Criteria Traceability
 
@@ -1645,18 +1686,18 @@ updated: ${today()}
 ## AI Model Routing
 
 - [ ] Every step has an \`ai_provider\` field.
-- [ ] Final review model is equal or stronger than the implementation model.
-- [ ] GPT-5.5 reviewed any GLM-5.2 work touching auth, billing, payments, migrations, permissions, or customer data.
+- [ ] Final review route is equal or stronger than the implementation route.
+- [ ] Configured premium-review routing covered any work touching auth, billing, payments, migrations, permissions, or customer data.
 
-| Step | Provider | Model | Reason | Reviewer |
-|---|---|---|---|---|
+| Step | Provider | Model | Risk Tier | Reason | Reviewer |
+|---|---|---|---|---|---|
 ${aiModelRoutingRows()}
 
 ## Pull Request Model Usage Summary
 
-| Step | Provider | Model | Reason | Reviewer |
-|---|---|---|---|---|
-| <step> | <provider> | <model> | <reason> | <reviewer> |
+| Step | Provider | Model | Risk Tier | Reason | Reviewer |
+|---|---|---|---|---|---|
+| <step> | <provider> | <model> | <risk-tier> | <reason> | <reviewer> |
 
 ## Findings By Severity
 

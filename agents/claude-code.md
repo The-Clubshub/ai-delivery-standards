@@ -68,8 +68,8 @@ The canvas must include:
 
 - Do not batch unrelated changes.
 - Do not build from a plan that is missing `ai_provider` for each operation.
-- Do not use GLM-5.2 for final architecture, auth, billing, database, or security decisions.
-- Require GPT-5.5 review for GLM-5.2 work touching auth, billing, payments, migrations, permissions, or customer data.
+- Do not use standard implementation routes for final architecture, auth, billing, database, or security decisions.
+- Require configured premium-review routing for standard implementation route work touching auth, billing, payments, migrations, permissions, or customer data.
 - Do not invent missing infrastructure.
 - Do not silently expand scope.
 - Do not leave specs stale after refactoring.

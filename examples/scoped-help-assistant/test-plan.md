@@ -17,11 +17,11 @@ Validate the assistant as a pipeline with deterministic seams. Unit test schema 
 
 ## AI Model Routing
 
-| Step | Provider | Model | Reason | Reviewer |
-|---|---|---|---|---|
-| Standard unit tests | Z.ai | GLM-5.2 | Cost-effective deterministic coverage | GPT-5.5 |
-| Edge-case and injection evals | OpenAI | GPT-5.5 | Failure-mode and safety reasoning | N/A |
-| Auth and tenant tests | OpenAI | GPT-5.5 | Permission and customer-data boundary | N/A |
+| Step | Provider | Model | Risk Tier | Reason | Reviewer |
+|---|---|---|---|---|---|
+| Standard unit tests | Project configured | Standard implementation route | `standard_implementation` | Cost-effective deterministic coverage | Code review route |
+| Edge-case and injection evals | Project configured | Standard review route | `standard_review` | Failure-mode and safety reasoning | N/A |
+| Auth and tenant tests | Project configured | Premium review route | `premium_review` | Permission and customer-data boundary | N/A |
 
 ## Test Matrix
 

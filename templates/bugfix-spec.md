@@ -68,22 +68,25 @@ Describe the defect, affected users, impact, and expected correction.
 
 ## AI Model Routing
 
-| Step | Provider | Model | Reason | Reviewer |
-|---|---|---|---|---|
-| Root cause analysis | OpenAI | GPT-5.5 | Failure-mode reasoning | N/A |
-| Minimal fix | Z.ai | GLM-5.2 | Bounded code correction | GPT-5.5 |
-| Review | OpenAI | GPT-5.5 | Final QA and blast-radius check | N/A |
+| Step | Provider | Model | Risk Tier | Reason | Reviewer |
+|---|---|---|---|---|---|
+| Root cause analysis | `<provider>` | `<model>` | `standard_review` | Failure-mode reasoning | N/A |
+| Minimal fix | `<provider>` | `<model>` | `standard_implementation` | Bounded code correction | `<code_review route>` |
+| Review | `<provider>` | `<model>` | `standard_review` | Final QA and blast-radius check | N/A |
 
 ```yaml
 ai_provider:
-  provider: zai
-  model: glm-5.2
+  provider: <project-configured-provider>
+  model: <project-configured-model>
+  risk_tier: standard_implementation
+  strength_rank: 1
   reason: minimal implementation after root-cause analysis
-  fallback_model: gpt-5.5
+  fallback_model: <premium-review-model>
   requires_premium_review: false
+  reviewer_route: code_review
 ```
 
-Set `requires_premium_review: true` and use GPT-5.5 review when the fix touches auth, billing, payments, migrations, permissions, or customer data.
+Set `requires_premium_review: true` and use configured premium-review routing when the fix touches auth, billing, payments, migrations, permissions, or customer data.
 
 ## Safeguards
 

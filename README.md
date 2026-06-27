@@ -53,9 +53,11 @@ Example fully automated policy:
 
 ## AI Model Routing
 
-Every task plan and delivery step must declare `ai_provider` before work starts. New project configs include a `modelRouting` matrix, and the authoritative standard lives in `standards/ai-model-routing.md`.
+Every task plan and delivery step must declare `ai_provider` before work starts. New project configs include a provider-agnostic `modelRouting` matrix, and the authoritative standard lives in `standards/ai-model-routing.md`.
 
-High-risk work such as architecture, auth, billing, payments, database, migrations, permissions, security, customer data, and final code review routes to OpenAI GPT-5.5. Bounded implementation, refactoring, standard unit tests, and low-risk documentation may use Z.ai GLM-5.2, but any GLM-5.2 work touching premium-review areas must receive GPT-5.5 review before merge.
+The standard defines required route keys, risk tiers, review rules, and evidence. Each product repository defines the concrete provider, model, runner, profile, and fallback values for each route in `.ai/config.json`.
+
+`init` scaffolds provider-neutral route placeholders; replace them with the providers, models, and execution profiles approved for the product before relying on routed automation.
 
 ## What This Repository Provides
 
@@ -259,14 +261,14 @@ ai-delivery loop init \
   --autonomy-tier 2
 ```
 
-`--routed-codex` expands to routed Codex builder and reviewer commands that read generated prompt files and launch the model declared by each task's `ai_provider` and `ai_reviewer`. Use it from a Desktop Codex thread when you want the current GPT-5.5 session to orchestrate separate GLM/OpenRouter implementation jobs and GPT-5.5 review jobs.
+`--routed-codex` expands to routed Codex builder and reviewer commands that read generated prompt files and launch the model declared by each task's `ai_provider` and `ai_reviewer`. Use it when the project has concrete execution values in `.ai/config.json` and a Desktop Codex thread should orchestrate separate implementation and review jobs.
 
 External builder and reviewer commands can also use model-routing placeholders directly:
 
 | Placeholder | Purpose |
 | --- | --- |
 | `{provider}` / `{model}` | Semantic provider and model for the active command role. |
-| `{executionProvider}` / `{executionModel}` | Concrete runner provider and model, such as `openrouter` and `z-ai/glm-5.2`. |
+| `{executionProvider}` / `{executionModel}` | Concrete runner provider and model from `.ai/config.json`. |
 | `{codexConfigArgs}` | Codex-ready provider/profile/model args for the active route. |
 | `{reviewerCodexConfigArgs}` | Codex-ready args for the reviewer route. |
 | `{prompt}` / `{output}` | Generated prompt file and optional command output file. |

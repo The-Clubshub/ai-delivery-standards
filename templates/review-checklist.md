@@ -22,22 +22,22 @@ updated: YYYY-MM-DD
 ## AI Model Routing
 
 - [ ] Every step has an `ai_provider` field with provider, model, reason, and `requires_premium_review`.
-- [ ] GLM-5.2 did not make final architecture, auth, billing, database, or security decisions.
-- [ ] Any GLM-5.2 work touching auth, billing, payments, migrations, permissions, or customer data received GPT-5.5 review.
-- [ ] Final review model is equal or stronger than the implementation model.
+- [ ] Standard implementation routes did not make final architecture, auth, billing, database, or security decisions.
+- [ ] Any work touching auth, billing, payments, migrations, permissions, or customer data received configured premium-review routing.
+- [ ] Final review route is equal or stronger than the implementation route.
 - [ ] Pull request includes the model usage summary below.
 
-| Step | Provider | Model | Reason | Reviewer |
-|---|---|---|---|---|
-| Planning | OpenAI | GPT-5.5 | Architecture/product reasoning | N/A |
-| Implementation | Z.ai | GLM-5.2 | Bulk code generation | GPT-5.5 |
-| Review | OpenAI | GPT-5.5 | Final QA | N/A |
+| Step | Provider | Model | Risk Tier | Reason | Reviewer |
+|---|---|---|---|---|---|
+| Planning | `<provider>` | `<model>` | `premium_review` | Architecture/product reasoning | N/A |
+| Implementation | `<provider>` | `<model>` | `standard_implementation` | Bounded implementation | `<code_review route>` |
+| Review | `<provider>` | `<model>` | `standard_review` | Final QA | N/A |
 
 ## Pull Request Model Usage Summary
 
-| Step | Provider | Model | Reason | Reviewer |
-|---|---|---|---|---|
-| `<step>` | `<provider>` | `<model>` | `<reason>` | `<reviewer>` |
+| Step | Provider | Model | Risk Tier | Reason | Reviewer |
+|---|---|---|---|---|---|
+| `<step>` | `<provider>` | `<model>` | `<risk-tier>` | `<reason>` | `<reviewer>` |
 
 ## Intent And Scope
 

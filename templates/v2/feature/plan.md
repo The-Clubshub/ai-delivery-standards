@@ -26,11 +26,11 @@ updated: YYYY-MM-DD
 
 Every operation must include an `ai_provider` block that follows `standards/ai-model-routing.md`.
 
-| Step | Provider | Model | Reason | Reviewer |
-|---|---|---|---|---|
-| Planning | OpenAI | GPT-5.5 | Architecture/product reasoning | N/A |
-| Implementation | Z.ai | GLM-5.2 | Bulk code generation | GPT-5.5 |
-| Review | OpenAI | GPT-5.5 | Final QA | N/A |
+| Step | Provider | Model | Risk Tier | Reason | Reviewer |
+|---|---|---|---|---|---|
+| Planning | `<provider>` | `<model>` | `premium_review` | Architecture/product reasoning | N/A |
+| Implementation | `<provider>` | `<model>` | `standard_implementation` | Bounded implementation | `<code_review route>` |
+| Review | `<provider>` | `<model>` | `standard_review` | Final QA | N/A |
 
 ## Operation Plan
 
@@ -44,11 +44,14 @@ Every operation must include an `ai_provider` block that follows `standards/ai-m
 
 ```yaml
 ai_provider:
-  provider: openai | zai | anthropic | other
-  model: gpt-5.5 | glm-5.2 | other
+  provider: <project-configured-provider>
+  model: <project-configured-model>
+  risk_tier: premium_review | standard_review | standard_implementation | low_risk | other
+  strength_rank: <optional numeric strength, higher is stronger>
   reason: <short explanation>
   fallback_model: <optional backup model>
   requires_premium_review: false
+  reviewer_route: <optional modelRouting route key>
 ```
 
 ## Dependencies And Migrations

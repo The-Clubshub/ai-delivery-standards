@@ -6,11 +6,11 @@
 
 ## AI Model Routing
 
-| Step | Provider | Model | Reason | Reviewer |
-|---|---|---|---|---|
-| Planning | OpenAI | GPT-5.5 | Architecture/product reasoning | N/A |
-| Implementation | Z.ai | GLM-5.2 | Bulk code generation | GPT-5.5 |
-| Review | OpenAI | GPT-5.5 | Final QA | N/A |
+| Step | Provider | Model | Risk Tier | Reason | Reviewer |
+|---|---|---|---|---|---|
+| Planning | `<provider>` | `<model>` | `premium_review` | Architecture/product reasoning | N/A |
+| Implementation | `<provider>` | `<model>` | `standard_implementation` | Bounded implementation | `<code_review route>` |
+| Review | `<provider>` | `<model>` | `standard_review` | Final QA | N/A |
 
 ## Validation
 

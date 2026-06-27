@@ -48,7 +48,7 @@ Operations should be mechanical and reversible where possible:
 - Replace dependency.
 - Delete dead path.
 
-Every operation must declare `ai_provider`. GLM-5.2 may perform mechanical refactors, but GPT-5.5 must handle final architecture decisions and review any refactor touching auth, billing, payments, migrations, permissions, database schema, or customer data.
+Every operation must declare `ai_provider`. Standard implementation routes may perform mechanical refactors, but configured premium-review routing must handle final architecture decisions and review any refactor touching auth, billing, payments, migrations, permissions, database schema, or customer data.
 
 ### 4. Refactor In Small Steps
 

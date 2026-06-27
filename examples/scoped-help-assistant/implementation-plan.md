@@ -33,26 +33,26 @@ source_spec: feature-spec.md
 
 ## AI Model Routing
 
-| Step | Provider | Model | Reason | Reviewer |
-|---|---|---|---|---|
-| Planning | OpenAI | GPT-5.5 | AI behavior, security, and product reasoning | N/A |
-| Implementation | Z.ai | GLM-5.2 | Bounded code generation from approved plan | GPT-5.5 |
-| Security-sensitive implementation | OpenAI | GPT-5.5 | Auth, tenant, permission, and customer-data boundaries | GPT-5.5 |
-| Review | OpenAI | GPT-5.5 | Final QA and safety gate | N/A |
+| Step | Provider | Model | Risk Tier | Reason | Reviewer |
+|---|---|---|---|---|---|
+| Planning | Project configured | Premium review route | `premium_review` | AI behavior, security, and product reasoning | N/A |
+| Implementation | Project configured | Standard implementation route | `standard_implementation` | Bounded code generation from approved plan | Code review route |
+| Security-sensitive implementation | Project configured | Premium review route | `premium_review` | Auth, tenant, permission, and customer-data boundaries | Security review route |
+| Review | Project configured | Standard review route | `standard_review` | Final QA and safety gate | N/A |
 
 ## Operation Plan
 
-| Step | Status | Operation | Provider | Model | Reviewer | Files Or Modules | Tests | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Not started | Define response schema and validation helper | Z.ai | GLM-5.2 | GPT-5.5 | `assistant/schema` | Schema unit tests | Must validate answer, refusal, clarification |
-| 2 | Not started | Implement intent classifier interface | OpenAI | GPT-5.5 | GPT-5.5 | `assistant/classifier` | Classifier unit and eval tests | Classification affects safety boundary |
-| 3 | Not started | Implement permission-scoped retriever | OpenAI | GPT-5.5 | GPT-5.5 | `assistant/retriever` | Integration tests with tenant fixtures | Filter by published status and visibility |
-| 4 | Not started | Implement evidence gate | OpenAI | GPT-5.5 | GPT-5.5 | `assistant/evidenceGate` | Low-score and empty evidence tests | Refuse below threshold |
-| 5 | Not started | Implement grounded generator | OpenAI | GPT-5.5 | GPT-5.5 | `assistant/generator` | Grounding, citation, invalid JSON tests | Use retrieved chunks only |
-| 6 | Not started | Add assistant API endpoint | OpenAI | GPT-5.5 | GPT-5.5 | `POST /api/help-assistant/messages` | API contract and auth tests | Rate limited |
-| 7 | Not started | Add help assistant UI panel | Z.ai | GLM-5.2 | GPT-5.5 | `HelpAssistantPanel` | Component and accessibility tests | Feature flag protected |
-| 8 | Not started | Add observability | Z.ai | GLM-5.2 | GPT-5.5 | logging, metrics, tracing helpers | Redaction and metric tests | No raw prompt logs |
-| 9 | Not started | Add AI evaluation suite | OpenAI | GPT-5.5 | GPT-5.5 | `evals/help-assistant` | Golden eval command | Run in CI or scheduled job |
+| Step | Status | Operation | Provider | Model | Risk Tier | Reviewer | Files Or Modules | Tests | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Not started | Define response schema and validation helper | Project configured | Standard implementation route | `standard_implementation` | Code review route | `assistant/schema` | Schema unit tests | Must validate answer, refusal, clarification |
+| 2 | Not started | Implement intent classifier interface | Project configured | Premium review route | `premium_review` | Security review route | `assistant/classifier` | Classifier unit and eval tests | Classification affects safety boundary |
+| 3 | Not started | Implement permission-scoped retriever | Project configured | Premium review route | `premium_review` | Security review route | `assistant/retriever` | Integration tests with tenant fixtures | Filter by published status and visibility |
+| 4 | Not started | Implement evidence gate | Project configured | Premium review route | `premium_review` | Security review route | `assistant/evidenceGate` | Low-score and empty evidence tests | Refuse below threshold |
+| 5 | Not started | Implement grounded generator | Project configured | Premium review route | `premium_review` | Security review route | `assistant/generator` | Grounding, citation, invalid JSON tests | Use retrieved chunks only |
+| 6 | Not started | Add assistant API endpoint | Project configured | Premium review route | `premium_review` | Security review route | `POST /api/help-assistant/messages` | API contract and auth tests | Rate limited |
+| 7 | Not started | Add help assistant UI panel | Project configured | Standard implementation route | `standard_implementation` | Code review route | `HelpAssistantPanel` | Component and accessibility tests | Feature flag protected |
+| 8 | Not started | Add observability | Project configured | Standard implementation route | `standard_implementation` | Code review route | logging, metrics, tracing helpers | Redaction and metric tests | No raw prompt logs |
+| 9 | Not started | Add AI evaluation suite | Project configured | Premium review route | `premium_review` | Security review route | `evals/help-assistant` | Golden eval command | Run in CI or scheduled job |
 
 ## Detailed Operations
 

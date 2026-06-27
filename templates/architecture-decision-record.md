@@ -30,14 +30,17 @@ State the decision clearly.
 
 ## AI Model Routing
 
-Architecture decisions must use GPT-5.5 or an explicitly approved equal-or-stronger model.
+Architecture decisions must use the configured premium-review route or an explicitly approved equal-or-stronger route.
 
 ```yaml
 ai_provider:
-  provider: openai
-  model: gpt-5.5
+  provider: <project-configured-provider>
+  model: <project-configured-model>
+  risk_tier: premium_review
+  strength_rank: 3
   reason: structural decisions have high long-term cost
   requires_premium_review: true
+  reviewer_route: architecture
 ```
 
 ## Options Considered

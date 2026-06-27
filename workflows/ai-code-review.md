@@ -92,9 +92,9 @@ Look for:
 Check:
 
 - Every delivery step has `ai_provider`.
-- GLM-5.2 did not make final architecture, auth, billing, database, or security decisions.
-- GPT-5.5 reviewed GLM-5.2 work touching auth, billing, payments, migrations, permissions, or customer data.
-- The final review model is equal or stronger than the implementation model.
+- Standard implementation routes did not make final architecture, auth, billing, database, or security decisions.
+- Configured premium-review routing covered work touching auth, billing, payments, migrations, permissions, or customer data.
+- The final review route is equal or stronger than the implementation route.
 - The pull request includes a model usage summary.
 
 ### 8. Review Spec-Code Sync

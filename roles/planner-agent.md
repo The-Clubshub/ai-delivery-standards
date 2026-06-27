@@ -23,7 +23,7 @@ Convert approved requirements into an implementation and validation plan.
 - Map acceptance criteria to tests.
 - Identify risks, migrations, rollback, flags, and observability work.
 - Declare `ai_provider` for every planned operation before work starts.
-- Route architecture, database, auth, billing, payments, security, permissions, and customer data work to GPT-5.5 review according to `standards/ai-model-routing.md`.
+- Route architecture, database, auth, billing, payments, security, permissions, and customer data work to the configured premium-review route according to `standards/ai-model-routing.md`.
 - Move to `plan_pending_review` when `approvalPolicy.plan` is `human_required`.
 - Move to `plan_approved` with `not_required` gate evidence when `approvalPolicy.plan` is `not_required`.
 

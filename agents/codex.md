@@ -99,8 +99,8 @@ Codex should not use speculative implementation details when the repo has a conc
 
 - Do not start with a code patch when the request changes user-facing behavior, API behavior, data persistence, authorization, infrastructure, or AI behavior.
 - Do not implement from a plan that is missing AI model routing.
-- Do not use GLM-5.2 for final architecture, auth, billing, database, or security decisions.
-- Ensure GPT-5.5 reviews GLM-5.2 work that touches auth, billing, payments, migrations, permissions, or customer data.
+- Do not use standard implementation routes for final architecture, auth, billing, database, or security decisions.
+- Ensure configured premium-review routing covers standard implementation route work that touches auth, billing, payments, migrations, permissions, or customer data.
 - Do not create new dependencies without recording why.
 - Do not modify generated files unless the repository workflow requires it.
 - Do not change public contracts without tests and migration notes.

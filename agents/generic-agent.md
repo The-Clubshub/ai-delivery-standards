@@ -35,10 +35,10 @@ Required bugfix artifact:
 
 Every task plan and delivery step must declare `ai_provider` before work starts, following `standards/ai-model-routing.md`.
 
-- Planning, architecture, database schema, edge-case tests, code review, security review, auth, billing, payments, and marketing copy default to OpenAI GPT-5.5.
-- Implementation, refactoring, standard unit tests, and low-risk documentation may use Z.ai GLM-5.2.
-- GLM-5.2 may implement code but must not make final architecture, auth, billing, database, or security decisions.
-- Any GLM-5.2 implementation touching auth, billing, payments, migrations, permissions, or customer data must receive GPT-5.5 review before merge.
+- Planning, architecture, database schema, edge-case tests, code review, security review, auth, billing, payments, and marketing copy use the configured premium-review or standard-review routes.
+- Implementation, refactoring, standard unit tests, and low-risk documentation may use configured standard implementation routes.
+- Standard implementation routes may implement code but must not make final architecture, auth, billing, database, or security decisions.
+- Any standard implementation route work touching auth, billing, payments, migrations, permissions, or customer data must receive configured premium-review routing before merge.
 - Pull requests and handoffs must include the model usage summary table.
 - Missing model routing fails standards validation.
 

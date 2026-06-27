@@ -20,7 +20,7 @@ Security risks are identified, mitigated, tested, and documented before release.
 
 ### 0. Verify Model Routing
 
-Security-sensitive work must use GPT-5.5 for review. If implementation used GLM-5.2 anywhere in the security-sensitive diff, require GPT-5.5 review before merge.
+Security-sensitive work must use the configured premium-review route. If implementation used a standard implementation route anywhere in the security-sensitive diff, require premium-review routing before merge.
 
 ### 1. Identify Assets And Actors
 
@@ -112,7 +112,7 @@ update the review checklist with validation evidence and residual risk.
 ## Quality Gates
 
 - [ ] Assets, actors, and trust boundaries are documented.
-- [ ] GPT-5.5 reviewed the security-sensitive work.
+- [ ] Configured premium-review routing reviewed the security-sensitive work.
 - [ ] Authorization is server-side and tested.
 - [ ] Input validation and safe errors are implemented.
 - [ ] Sensitive data is redacted.
