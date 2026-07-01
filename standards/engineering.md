@@ -98,7 +98,7 @@ Update docs when:
 AI-generated code must:
 
 - Be reviewed against the same standards as human code.
-- Declare and follow AI model routing from `standards/ai-model-routing.md`.
+- Declare and follow AI workbench/model selection from `standards/ai-workbench.md`.
 - Include tests proportionate to risk.
 - Include spec updates when behavior changes.
 - Avoid invented APIs and unverified assumptions.

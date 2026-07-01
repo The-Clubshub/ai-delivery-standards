@@ -314,7 +314,7 @@ Declare the engineering conventions the agent must follow while implementing the
 Required standards:
 
 - `standards/engineering.md`
-- `standards/ai-model-routing.md`
+- `standards/ai-workbench.md`
 - `standards/testing.md`
 - `standards/security.md`
 - `standards/accessibility.md`

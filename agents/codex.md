@@ -9,10 +9,12 @@ Codex acts as a senior engineer implementing from structured prompts, not as an 
 Codex must:
 
 - Read the repository before deciding.
+- Use `/goal` as the top-level objective for non-trivial or multi-feature work when the Codex surface supports it.
 - Create or update required specs before non-trivial code.
 - Implement in small operations from `implementation-plan.md`.
-- Declare and follow AI model routing for every operation.
-- Maintain a feature queue and continue automatically when a request contains multiple independent features.
+- Record and follow the configured AI workbench/model profile.
+- Show a visible desktop status update before switching to another configured model.
+- Maintain a feature queue and continue automatically when a request contains multiple independent features or a broad deliverable.
 - Run validation when feasible.
 - Keep the user informed about findings, edits, tests, and blockers.
 - Never overwrite unrelated user changes.
@@ -28,6 +30,20 @@ Codex must:
 | Scope is unclear | Ask focused blocking questions or write explicit assumptions for review. |
 | Code differs from spec | Update the spec first, then code, unless code is clearly wrong. |
 | Tests cannot run | State why and provide the best available validation. |
+
+## Goal Mode
+
+For non-trivial Codex work, start or confirm an active `/goal` before creating feature artifacts or implementation plans.
+
+The active goal:
+
+- Governs feature selection, feature queue order, planning, implementation scope, review, and completion criteria.
+- Must be concrete enough for Codex to decide when the work is complete.
+- Must remain active until the objective is complete, blocked, or explicitly changed by the user.
+- Must be referenced by any feature queue or lifecycle artifacts created to satisfy it.
+- Must not override approval gates, feature state, safety rules, or newer user instructions.
+
+If `/goal` is not available in the active Codex surface, record the same objective in `.ai/queues/active.md`, the active feature `requirements.md`, or the relevant planning artifact, then continue under the normal lifecycle.
 
 ## Codex Workflow
 
@@ -45,7 +61,7 @@ Codex must:
    - Convert REASONS `O - Operations` into a stepwise implementation plan.
    - Map each acceptance criterion to at least one test.
    - Identify standards that apply.
-   - Add `ai_provider` to every operation using `standards/ai-model-routing.md`.
+   - Record the configured AI workbench/model table using `standards/ai-workbench.md`.
 
 4. **Implement**
    - Edit only files required by the current operation.
@@ -64,7 +80,9 @@ Codex must:
 
 ## Autonomous Feature Queue
 
-When a request contains multiple independent features, Codex should use `workflows/autonomous-feature-queue.md`.
+When a request contains multiple independent features or a broad deliverable such as a full website, Codex should use `workflows/autonomous-feature-queue.md`.
+
+Before implementation starts, Codex must create a full-request plan and queue that covers the original request. Once the user approves that plan or says to implement it, Codex should run every unblocked queued feature needed for the original request without asking for separate approval to start the next feature.
 
 For each feature:
 
@@ -78,7 +96,7 @@ For each feature:
 8. Mark the feature complete with files changed, tests run, remaining risks, and the next feature selected.
 9. Continue automatically to the next unblocked feature without asking for approval to start it.
 
-Codex should ask the user only for the stop conditions listed in `workflows/autonomous-feature-queue.md`.
+Codex should ask the user only for the stop conditions listed in `workflows/autonomous-feature-queue.md`, for user-directed scope changes, or for work outside the original request.
 
 ## How Codex Should Generate Specs
 
@@ -98,9 +116,9 @@ Codex should not use speculative implementation details when the repo has a conc
 ## Implementation Guardrails
 
 - Do not start with a code patch when the request changes user-facing behavior, API behavior, data persistence, authorization, infrastructure, or AI behavior.
-- Do not implement from a plan that is missing AI model routing.
-- Do not use standard implementation routes for final architecture, auth, billing, database, or security decisions.
-- Ensure configured premium-review routing covers standard implementation route work that touches auth, billing, payments, migrations, permissions, or customer data.
+- Do not implement from a plan that is missing AI workbench/model selection.
+- Do not make final architecture, auth, billing, database, or security decisions without high-risk review when required.
+- Ensure the configured `highRiskReview` model reviews work that touches auth, billing, payments, migrations, permissions, or customer data.
 - Do not create new dependencies without recording why.
 - Do not modify generated files unless the repository workflow requires it.
 - Do not change public contracts without tests and migration notes.

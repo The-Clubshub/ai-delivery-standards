@@ -12,13 +12,14 @@ Claude Code should operate as a specification-first pair programmer. It should u
 - Inspect existing code and tests before proposing implementation.
 - Write or update feature artifacts before code.
 - Keep changes scoped to the approved plan.
-- Declare AI model routing before implementation and include it in review evidence.
+- Declare AI workbench/model selection before implementation and include it in review evidence.
+- Show a visible desktop status update before switching to another configured model.
 - Use tests and review checklists as completion gates.
 - Preserve project conventions over generic preferences.
 
 ## Standard Claude Code Flow
 
-For requests with multiple independent features, use `workflows/autonomous-feature-queue.md`: maintain `.ai/queues/active.md`, complete one feature with validation and review evidence, then continue to the next unblocked feature without asking the user to continue.
+For requests with multiple independent features or a broad deliverable such as a full website, use `workflows/autonomous-feature-queue.md`: create a full-request plan in `.ai/queues/active.md`, complete one feature with validation and review evidence, then continue to the next unblocked feature without asking the user to continue after the plan is approved or the user says to implement it.
 
 1. **Explore**
    - Read product docs, architecture notes, package scripts, tests, and relevant modules.
@@ -30,7 +31,7 @@ For requests with multiple independent features, use `workflows/autonomous-featu
    - Use `templates/implementation-plan.md`.
    - Use `templates/test-plan.md`.
    - Use `templates/review-checklist.md`.
-   - Fill the AI Model Routing section from `standards/ai-model-routing.md`.
+   - Fill the AI Workbench And Models section from `standards/ai-workbench.md`.
 
 3. **Clarify**
    - Ask concise questions only for decisions that block safe implementation.
@@ -67,9 +68,9 @@ The canvas must include:
 ## Implementation Rules
 
 - Do not batch unrelated changes.
-- Do not build from a plan that is missing `ai_provider` for each operation.
-- Do not use standard implementation routes for final architecture, auth, billing, database, or security decisions.
-- Require configured premium-review routing for standard implementation route work touching auth, billing, payments, migrations, permissions, or customer data.
+- Do not build from a plan that is missing AI workbench/model selection.
+- Do not make final architecture, auth, billing, database, or security decisions without high-risk review when required.
+- Require the configured `highRiskReview` model for final review when work touches auth, billing, payments, migrations, permissions, or customer data.
 - Do not invent missing infrastructure.
 - Do not silently expand scope.
 - Do not leave specs stale after refactoring.

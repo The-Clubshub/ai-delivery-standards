@@ -3,7 +3,7 @@
   "$id": "https://ai-delivery-standards.local/schemas/ai-config.schema.json",
   "title": "AI Delivery V2 Config",
   "type": "object",
-  "required": ["operatingSystemVersion", "standardsPath", "aiPath", "featurePath", "approvalPolicy", "modelRouting"],
+  "required": ["operatingSystemVersion", "standardsPath", "aiPath", "featurePath", "approvalPolicy", "aiWorkbench"],
   "properties": {
     "operatingSystemVersion": { "const": "v2" },
     "standardsVersion": { "type": "string" },
@@ -25,7 +25,7 @@
         "implementation": { "$ref": "#/$defs/approvalGatePolicy" }
       }
     },
-    "modelRouting": { "$ref": "#/$defs/routingMatrix" },
+    "aiWorkbench": { "$ref": "#/$defs/aiWorkbench" },
     "requiredFeatureArtifacts": {
       "type": "array",
       "items": { "type": "string" }
@@ -37,109 +37,40 @@
       "enum": ["human_required", "not_required"],
       "description": "human_required requires explicit human approval; not_required lets the responsible agent advance after required artifacts and evidence are ready."
     },
-    "routingMatrix": {
+    "aiWorkbench": {
       "type": "object",
-      "required": [
-        "product_strategy",
-        "architecture",
-        "database_schema",
-        "implementation",
-        "refactoring",
-        "unit_tests",
-        "edge_case_tests",
-        "code_review",
-        "security_review",
-        "auth_billing_payments",
-        "documentation",
-        "marketing_copy"
-      ],
-      "additionalProperties": { "$ref": "#/$defs/aiProvider" },
-      "properties": {
-        "product_strategy": { "$ref": "#/$defs/aiProvider" },
-        "architecture": { "$ref": "#/$defs/aiProvider" },
-        "database_schema": { "$ref": "#/$defs/aiProvider" },
-        "implementation": { "$ref": "#/$defs/aiProvider" },
-        "refactoring": { "$ref": "#/$defs/aiProvider" },
-        "unit_tests": { "$ref": "#/$defs/aiProvider" },
-        "edge_case_tests": { "$ref": "#/$defs/aiProvider" },
-        "code_review": { "$ref": "#/$defs/aiProvider" },
-        "security_review": { "$ref": "#/$defs/aiProvider" },
-        "auth_billing_payments": { "$ref": "#/$defs/aiProvider" },
-        "documentation": { "$ref": "#/$defs/aiProvider" },
-        "marketing_copy": { "$ref": "#/$defs/aiProvider" }
-      }
-    },
-    "aiProvider": {
-      "type": "object",
-      "required": ["provider", "model", "reason", "requires_premium_review"],
+      "required": ["provider", "mode", "stageModels"],
       "additionalProperties": false,
       "properties": {
-        "route_key": {
-          "type": "string",
-          "description": "Project modelRouting key this route was selected from, for example implementation or security_review."
-        },
         "provider": {
           "type": "string",
-          "minLength": 1,
-          "description": "Project-defined provider id. This may name a hosted vendor, local model service, router, or internal AI platform."
+          "enum": ["codex", "claude", "cursor"],
+          "description": "Desktop app or CLI used for AI delivery work."
         },
-        "model": {
+        "mode": {
           "type": "string",
-          "minLength": 1,
-          "description": "Project-defined model id or semantic model route."
+          "enum": ["desktop_or_cli"]
         },
-        "risk_tier": {
-          "type": "string",
-          "enum": ["premium_review", "standard_review", "standard_implementation", "low_risk", "other"]
-        },
-        "strength_rank": {
-          "type": "integer",
-          "minimum": 0,
-          "description": "Optional provider-agnostic strength rank. Higher means stronger."
-        },
-        "reason": { "type": "string", "minLength": 1 },
-        "fallback_model": { "type": "string" },
-        "reviewer_route": {
-          "type": "string",
-          "description": "Optional modelRouting key that should review this route."
-        },
-        "requires_premium_review": { "type": "boolean" },
-        "execution": { "$ref": "#/$defs/executionRoute" }
-      }
-    },
-    "executionRoute": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "runner": {
-          "type": "string",
-          "enum": ["codex", "claude", "cursor", "other"]
-        },
-        "provider": {
-          "type": "string",
-          "description": "Concrete runtime provider id from project configuration."
-        },
-        "model": {
-          "type": "string",
-          "description": "Concrete runtime model id from project configuration."
-        },
-        "profile": {
-          "type": "string",
-          "description": "Optional runner profile name."
-        },
-        "codex_provider": {
-          "type": "string",
-          "description": "Optional Codex-specific provider override."
-        },
-        "codex_model": {
-          "type": "string",
-          "description": "Optional Codex-specific model override."
-        },
-        "codex_profile": {
-          "type": "string",
-          "description": "Optional Codex-specific profile override."
+        "stageModels": {
+          "type": "object",
+          "required": ["requirements", "planning", "building", "reviewing", "testing", "syncCompletion", "highRiskReview"],
+          "additionalProperties": false,
+          "properties": {
+            "requirements": { "$ref": "#/$defs/modelName" },
+            "planning": { "$ref": "#/$defs/modelName" },
+            "building": { "$ref": "#/$defs/modelName" },
+            "reviewing": { "$ref": "#/$defs/modelName" },
+            "testing": { "$ref": "#/$defs/modelName" },
+            "syncCompletion": { "$ref": "#/$defs/modelName" },
+            "highRiskReview": { "$ref": "#/$defs/modelName" }
+          }
         }
       }
+    },
+    "modelName": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Model label as exposed by the selected workbench. Use workbench-default to use the current default."
     }
   }
 }

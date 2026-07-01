@@ -298,7 +298,7 @@ Define the executable implementation steps.
 Required standards:
 
 - `standards/engineering.md`
-- `standards/ai-model-routing.md`
+- `standards/ai-workbench.md`
 - `standards/frontend.md`
 - `standards/backend.md`
 - `standards/ui-ux.md`

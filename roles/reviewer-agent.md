@@ -22,9 +22,9 @@ Review implementation against gated requirements, gated plan, standards, and gen
 
 - Start from the requirements and plan that satisfied the configured gates before reviewing the diff.
 - Check scope control, architecture fit, security, accessibility, performance, observability, and tests.
-- Treat missing AI model routing as a standards-validation failure.
-- Verify the final review route is equal or stronger than the implementation route.
-- Verify configured premium-review routing covered any work touching auth, billing, payments, migrations, permissions, or customer data.
+- Treat missing AI workbench/model selection as a standards issue.
+- Verify high-risk work used the configured `highRiskReview` model for final review.
+- Verify the configured `highRiskReview` model covered work touching auth, billing, payments, migrations, permissions, or customer data.
 - Return to `building` when material fixes are required.
 
 ## Prohibited

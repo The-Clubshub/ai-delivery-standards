@@ -66,29 +66,21 @@ Describe the defect, affected users, impact, and expected correction.
 
 - `<not part of this fix>`
 
-## AI Model Routing
+## AI Workbench And Models
 
-| Step | Provider | Model | Risk Tier | Reason | Reviewer |
-|---|---|---|---|---|---|
-| Root cause analysis | `<provider>` | `<model>` | `standard_review` | Failure-mode reasoning | N/A |
-| Minimal fix | `<provider>` | `<model>` | `standard_implementation` | Bounded code correction | `<code_review route>` |
-| Review | `<provider>` | `<model>` | `standard_review` | Final QA and blast-radius check | N/A |
+| Stage | Workbench | Model |
+| --- | --- | --- |
+| Requirements | `<codex/claude/cursor>` | `<model>` |
+| Planning | `<codex/claude/cursor>` | `<model>` |
+| Build | `<codex/claude/cursor>` | `<model>` |
+| Review | `<codex/claude/cursor>` | `<model>` |
+| Test | `<codex/claude/cursor>` | `<model>` |
+| Sync and completion | `<codex/claude/cursor>` | `<model>` |
+| High-risk review | `<codex/claude/cursor>` | `<model>` |
 
-```yaml
-ai_provider:
-  provider: <project-configured-provider>
-  model: <project-configured-model>
-  risk_tier: standard_implementation
-  strength_rank: 1
-  reason: minimal implementation after root-cause analysis
-  fallback_model: <premium-review-model>
-  requires_premium_review: false
-  reviewer_route: code_review
-```
+Use `syncCompletion` for Sync Agent handoff and completion summaries. Use `highRiskReview` for final review when work touches auth, permissions, billing, payments, security, customer data, database schema, migrations, tenant boundaries, or architecture.
 
-Set `requires_premium_review: true` and use configured premium-review routing when the fix touches auth, billing, payments, migrations, permissions, or customer data.
-
-## Safeguards
+## Safeguards## Safeguards
 
 - [ ] Fix does not weaken security, authorization, privacy, or accessibility.
 - [ ] Fix includes regression coverage.

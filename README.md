@@ -16,10 +16,8 @@ Every non-trivial feature follows this lifecycle:
 intake
 -> requirements_draft
 -> requirements_pending_review
--> requirements_approved
 -> plan_draft
 -> plan_pending_review
--> plan_approved
 -> building
 -> reviewing
 -> testing
@@ -29,15 +27,17 @@ intake
 
 The feature may enter `blocked` from any non-terminal state.
 
+`requirements_approved` and `plan_approved` remain valid for legacy state files, but normal flow must not stop there. Approval immediately advances to `plan_draft` or `building`.
+
 ## Configurable Approval Gates
 
 | Gate | Transition | Command When Human Required | Default Policy |
 | --- | --- | --- | --- |
-| Requirements | `requirements_pending_review -> requirements_approved` | `/approve-requirements` | `human_required` |
-| Plan | `plan_pending_review -> plan_approved` | `/approve-plan` | `human_required` |
+| Requirements | `requirements_pending_review -> plan_draft` | `/approve-requirements` | `human_required` |
+| Plan | `plan_pending_review -> building` | `/approve-plan` | `human_required` |
 | Implementation | `ready_for_human_review -> complete` | `/complete` | `human_required` |
 
-AI agents may record approvals after humans give them. AI agents must never self-approve a `human_required` gate.
+AI agents may record approvals after humans give them. AI agents must never self-approve a `human_required` gate. Approval commands start the next lifecycle action immediately; `/continue` is not required after `/approve-requirements`, `/approve-plan`, or `/complete`.
 
 Example fully automated policy:
 
@@ -51,13 +51,33 @@ Example fully automated policy:
 }
 ```
 
-## AI Model Routing
+## AI Workbench And Models
 
-Every task plan and delivery step must declare `ai_provider` before work starts. New project configs include a provider-agnostic `modelRouting` matrix, and the authoritative standard lives in `standards/ai-model-routing.md`.
+Default mode uses one AI workbench for the project: Codex, Claude, or Cursor. The project then records which model to use for requirements, planning, build work, review, testing, sync/completion, and high-risk review.
 
-The standard defines required route keys, risk tiers, review rules, and evidence. Each product repository defines the concrete provider, model, runner, profile, and fallback values for each route in `.ai/config.json`.
+New project configs include a simple `aiWorkbench` object in `.ai/config.json`. Default mode only stores the selected workbench and stage model names.
 
-`init` scaffolds provider-neutral route placeholders; replace them with the providers, models, and execution profiles approved for the product before relying on routed automation.
+Default stage models are:
+
+| Stage | Default model |
+| --- | --- |
+| Requirements | `GPT-5.5` |
+| Planning | `GPT-5.5` |
+| Building | `GPT-5.3 Codex` |
+| Reviewing | `GPT-5.5` |
+| Testing | `GPT-5.3 Codex` |
+| Sync and completion | `GPT-5.4 mini` |
+| High-risk review | `GPT-5.5` |
+
+Use the configured `highRiskReview` model for final review when work touches auth, permissions, billing, payments, security, customer data, database schema, migrations, tenant boundaries, or architecture. The authoritative standard lives in `standards/ai-workbench.md`.
+
+When an agent changes to another configured model, the desktop app should show the model switch before the next stage starts.
+
+Model IDs are passed through unchanged, so use exact provider model names when you want deterministic model behavior. When you choose a workbench during `init`, the model prompts now show provider-relevant options before falling back to manual entry.
+
+- For Codex, the CLI reads `codex debug models` when available, then falls back to recommended Codex model IDs.
+- For Claude, use the official Claude model IDs (for example `claude-fable-5`) or query `GET https://api.anthropic.com/v1/models`.
+- For Cursor, model names come from the providers you connect in `Cursor Settings > Models` (OpenAI, Anthropic, Google, Azure OpenAI, Bedrock). For custom providers, fetch model IDs from that provider’s own API and paste them in the stage fields.
 
 ## What This Repository Provides
 
@@ -68,7 +88,7 @@ The standard defines required route keys, risk tiers, review rules, and evidence
 | Agent roles | Requirements, Planner, Builder, Reviewer, Tester, Sync | `roles/` |
 | Commands | Universal lifecycle command protocol | `commands/` |
 | Lifecycle workflows | V2 state machine and delivery workflows | `workflows/` |
-| Quality standards | Engineering, AI model routing, frontend, backend, API, security, accessibility, testing, observability, performance, UI/UX | `standards/` |
+| Quality standards | Engineering, AI workbench/models, Codex goal mode, frontend, backend, API, security, accessibility, testing, observability, performance, UI/UX | `standards/` |
 | Templates | V2 feature lifecycle templates plus legacy SPDD templates | `templates/` |
 | Schemas | Machine-readable config, state, registry, and approval schemas | `schemas/` |
 | Bootstrap CLI | Init, sync, feature creation, loop engine, doctor checks | `bin/ai-delivery.js` |
@@ -89,25 +109,37 @@ cd /path/to/product-repo
 node /path/to/ai-delivery-standards/bin/ai-delivery.js init .
 ```
 
-Skip only manual requirements approval:
+Interactive init always opens the onboarding flow. It asks for paths, the initial feature, mandatory human approval gates, the AI workbench, and which models to use for each delivery stage. To change config later, run `init` again and re-onboard; the existing answers are used as defaults.
+
+The onboarding questions cover:
+
+- Project paths: AI operating-system path, vendored standards path, product docs path, feature lifecycle root, and architecture decisions path.
+- Initial feature: feature ID and name.
+- Human approval gates: whether requirements, plan, and implementation completion need mandatory human approval.
+- Workbench: Codex Desktop/CLI, Claude Desktop/CLI, or Cursor.
+- AI models: which model inside that workbench should handle requirements, planning, build work, tests, review, sync/completion, and high-risk review.
+
+Seed the onboarding default to skip only manual requirements approval:
 
 ```bash
 node /path/to/ai-delivery-standards/bin/ai-delivery.js init . --requirements-approval not_required
 ```
 
-Approve requirements manually, then let the agent run planning, build, review, test, fixes, and completion without more manual approval gates:
+Seed the onboarding default to approve requirements manually, then let the agent run planning, build, review, test, fixes, and completion without more manual approval gates:
 
 ```bash
 node /path/to/ai-delivery-standards/bin/ai-delivery.js init . --autonomous-after-requirements
 ```
 
-Allow the full lifecycle to run without manual approval gates:
+Seed the onboarding default to allow the full lifecycle to run without manual approval gates:
 
 ```bash
 node /path/to/ai-delivery-standards/bin/ai-delivery.js init . --approval-policy not_required
 ```
 
 For large requests such as building a site from scratch, use `--autonomous-after-requirements` when you want one human checkpoint for scope and acceptance criteria, followed by an autonomous plan/build/review/test loop. The agent should still split work into bounded operations or queue items, record evidence, and stop for blockers such as unclear requirements, credentials, security decisions, destructive migrations, or failing validation it cannot resolve safely.
+
+For broad requests such as "build a full website", the plan must cover the full original request before implementation starts. If the user approves that plan or says to implement it, the agent should run every unblocked feature in the planned queue without asking for separate approval before each feature. It should ask again only for a defined blocker, a scope change, or work outside the original request.
 
 Dry-run first if you want to preview the generated files:
 
@@ -121,6 +153,7 @@ node /path/to/ai-delivery-standards/bin/ai-delivery.js init . --dry-run
 product-repo/
   AGENTS.md
   .ai-delivery.json
+  .gitignore
   .ai/
     config.json
     registry.json
@@ -157,6 +190,8 @@ product-repo/
 
 `AGENTS.md` is the bootloader. `.ai/` is the operating-system control plane. `.ai/ai-delivery-standards/` is the vendored policy library.
 
+`init` ensures `.ai/` is present in the target repository `.gitignore`.
+
 If a project already has `AGENTS.md`, `init` keeps it unless `--force` is used.
 
 ## Common Commands
@@ -190,16 +225,26 @@ These commands are tool-agnostic. Use them in chat, CLI wrappers, issues, PR com
 | Command | Purpose |
 | --- | --- |
 | `/start-feature` | Create or begin a feature lifecycle entry. |
-| `/status` | Report active feature, state, approvals, blockers, and next allowed action. |
-| `/approve-requirements` | Human approval for requirements when the requirements gate is `human_required`. |
-| `/approve-plan` | Human approval for implementation plan and test strategy when the plan gate is `human_required`. |
+| `/status` | Report active feature, state, approvals, blockers, and next action. |
+| `/approve-requirements` | Human approval for requirements, then immediately start planning. |
+| `/approve-plan` | Human approval for the implementation plan and test strategy, then immediately start building the full approved request. |
 | `/build` | Builder Agent starts or continues approved implementation. |
 | `/ai-review` | Reviewer Agent reviews implementation against approved artifacts. |
 | `/test` | Tester Agent records validation evidence. |
-| `/continue` | Continue the next allowed lifecycle action without skipping gates. |
-| `/complete` | Human implementation approval and final completion when the implementation gate is `human_required`. |
+| `/continue` | Resume the next lifecycle action after an interruption or stale handoff. |
+| `/complete` | Human implementation approval and immediate completion when the implementation gate is `human_required`. |
 
 If a command is not implemented as a CLI subcommand yet, agents must follow the semantics in `commands/command-protocol.md`.
+
+## Codex Goal Mode
+
+When the selected workbench is Codex, larger work should run under an active `/goal`.
+
+`/goal` is the continuous objective above individual features, plans, and queue items. It controls scope, queue priority, and completion criteria, but it does not override approval gates, feature state, safety rules, or newer user instructions.
+
+Use `/goal` before `/start-feature` for large or multi-feature work. If `/goal` is unavailable in the active Codex surface, record the same objective in `.ai/queues/active.md` or the active feature artifacts and continue under the normal lifecycle.
+
+The authoritative rule lives in `standards/codex-goal-mode.md`.
 
 ## Loop Engine
 
@@ -250,36 +295,36 @@ If no external builder command is configured, the loop writes `BUILDER_PROMPT.md
 ai-delivery loop run --after-build
 ```
 
-You can connect an external agent command:
+When onboarding configures Codex as the workbench, `loop init` can wire simple Codex builder or reviewer commands automatically. Custom commands can still override the automatic wiring:
 
 ```bash
 ai-delivery loop init \
   --spec SPEC.md \
   --standards AI_STANDARDS.md \
-  --routed-codex \
+  --builder-command "your-agent --model {model} < {prompt}" \
   --verify "npm run check" \
   --autonomy-tier 2
 ```
 
-`--routed-codex` expands to routed Codex builder and reviewer commands that read generated prompt files and launch the model declared by each task's `ai_provider` and `ai_reviewer`. Use it when the project has concrete execution values in `.ai/config.json` and a Desktop Codex thread should orchestrate separate implementation and review jobs.
+Automatic Codex loop commands read generated prompt files and use the model from each task's `ai_model` selection when a concrete model is configured.
 
-External builder and reviewer commands can also use model-routing placeholders directly:
+External builder and reviewer commands can also use simple workbench/model placeholders directly:
 
 | Placeholder | Purpose |
 | --- | --- |
-| `{provider}` / `{model}` | Semantic provider and model for the active command role. |
-| `{executionProvider}` / `{executionModel}` | Concrete runner provider and model from `.ai/config.json`. |
-| `{codexConfigArgs}` | Codex-ready provider/profile/model args for the active route. |
-| `{reviewerCodexConfigArgs}` | Codex-ready args for the reviewer route. |
+| `{workbench}` | Selected workbench. |
+| `{stage}` / `{model}` | Current task stage and selected model. |
+| `{modelArg}` | Codex-style `-m <model>` argument, empty for `workbench-default`. |
+| `{reviewModel}` / `{reviewModelArg}` | Review model and Codex-style review model argument. |
 | `{prompt}` / `{output}` | Generated prompt file and optional command output file. |
 
-For Codex with OpenRouter fallback, use `{codexConfigArgs}`. For other runners, use their own model flag, for example:
+For other runners, use their own model flag, for example:
 
 ```bash
 ai-delivery loop init \
   --spec SPEC.md \
   --standards AI_STANDARDS.md \
-  --builder-command "claude --model {executionModel} < {prompt}" \
+  --builder-command "claude --model {model} < {prompt}" \
   --autonomy-tier 2
 ```
 

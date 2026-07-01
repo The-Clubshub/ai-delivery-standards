@@ -17,31 +17,32 @@ updated: YYYY-MM-DD
 - [ ] Implementation plan exists and reflects completed work.
 - [ ] Test plan exists and reflects executed validation.
 - [ ] ADRs exist for long-lived architecture decisions.
-- [ ] AI model routing is declared for every delivery step.
+- [ ] AI workbench/model selection is declared for every delivery step.
 
-## AI Model Routing
+## AI Workbench And Models
 
-- [ ] Every step has an `ai_provider` field with provider, model, reason, and `requires_premium_review`.
-- [ ] Standard implementation routes did not make final architecture, auth, billing, database, or security decisions.
-- [ ] Any work touching auth, billing, payments, migrations, permissions, or customer data received configured premium-review routing.
-- [ ] Final review route is equal or stronger than the implementation route.
-- [ ] Pull request includes the model usage summary below.
+| Stage | Workbench | Model |
+| --- | --- | --- |
+| Requirements | `<codex/claude/cursor>` | `<model>` |
+| Planning | `<codex/claude/cursor>` | `<model>` |
+| Build | `<codex/claude/cursor>` | `<model>` |
+| Review | `<codex/claude/cursor>` | `<model>` |
+| Test | `<codex/claude/cursor>` | `<model>` |
+| Sync and completion | `<codex/claude/cursor>` | `<model>` |
+| High-risk review | `<codex/claude/cursor>` | `<model>` |
 
-| Step | Provider | Model | Risk Tier | Reason | Reviewer |
-|---|---|---|---|---|---|
-| Planning | `<provider>` | `<model>` | `premium_review` | Architecture/product reasoning | N/A |
-| Implementation | `<provider>` | `<model>` | `standard_implementation` | Bounded implementation | `<code_review route>` |
-| Review | `<provider>` | `<model>` | `standard_review` | Final QA | N/A |
+Use `syncCompletion` for Sync Agent handoff and completion summaries. Use `highRiskReview` for final review when work touches auth, permissions, billing, payments, security, customer data, database schema, migrations, tenant boundaries, or architecture.
 
 ## Pull Request Model Usage Summary
 
-| Step | Provider | Model | Risk Tier | Reason | Reviewer |
-|---|---|---|---|---|---|
-| `<step>` | `<provider>` | `<model>` | `<risk-tier>` | `<reason>` | `<reviewer>` |
+| Stage | Workbench | Model | Notes |
+| --- | --- | --- | --- |
+| `<stage>` | `<workbench>` | `<model>` | `<notes>` |
 
-## Intent And Scope
+## Intent And Scope## Intent And Scope
 
 - [ ] Implementation matches the stated requirements and acceptance criteria.
+- [ ] For broad or multi-feature requests, the queue and plan cover the full original request.
 - [ ] Scope-out items were not implemented accidentally.
 - [ ] User, business, and operational outcomes are clear.
 - [ ] Any requirement changes were applied to specs before code.

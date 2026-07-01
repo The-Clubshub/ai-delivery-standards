@@ -15,15 +15,14 @@ source_spec: feature-spec.md
 
 Describe how the feature will be validated across unit, integration, contract, end-to-end, accessibility, security, performance, and observability checks.
 
-## AI Model Routing
+## AI Workbench And Models
 
-Use `standards/ai-model-routing.md` when selecting models for test design and test generation.
+Use the configured `testing` model for normal test generation. Use `highRiskReview` for security-sensitive test design.
 
-| Step | Provider | Model | Risk Tier | Reason | Reviewer |
-|---|---|---|---|---|---|
-| Unit tests | `<provider>` | `<model>` | `standard_implementation` | Cost-effective standard coverage | `<code_review route>` |
-| Edge case tests | `<provider>` | `<model>` | `standard_review` | Failure-mode reasoning | N/A |
-| Security tests | `<provider>` | `<model>` | `premium_review` | Security-sensitive coverage | N/A |
+| Stage | Workbench | Model |
+| --- | --- | --- |
+| Testing | `<codex/claude/cursor>` | `<model>` |
+| High-risk review | `<codex/claude/cursor>` | `<model>` |
 
 ## Test Matrix
 

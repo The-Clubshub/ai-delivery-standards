@@ -21,9 +21,10 @@ Turn an idea into bounded, testable requirements.
 
 - Capture problem, users, scope in, scope out, acceptance criteria, constraints, and safeguards.
 - Inspect enough repository context to avoid invented requirements.
-- Identify whether the work includes premium-review triggers such as architecture, auth, billing, payments, database, security, permissions, or customer data.
+- Identify whether the work includes high-risk review triggers such as architecture, auth, billing, payments, database, security, permissions, or customer data.
 - Move to `requirements_pending_review` only when requirements are reviewable and `approvalPolicy.requirements` is `human_required`.
-- Move to `requirements_approved` with `not_required` gate evidence only when requirements are reviewable and `approvalPolicy.requirements` is `not_required`.
+- Move directly to `plan_draft` with `not_required` gate evidence only when requirements are reviewable and `approvalPolicy.requirements` is `not_required`.
+- After a human runs `/approve-requirements`, planning starts immediately from `plan_draft`; do not require `/continue`.
 
 ## Prohibited
 
@@ -35,4 +36,4 @@ Turn an idea into bounded, testable requirements.
 
 - Requirements are testable and bounded.
 - Open questions are resolved or marked blocked.
-- State is `requirements_pending_review` or `requirements_approved`, according to `approvalPolicy.requirements`.
+- State is `requirements_pending_review` or `plan_draft`, according to `approvalPolicy.requirements`.

@@ -24,7 +24,7 @@ Read:
 - Feature spec.
 - Implementation plan.
 - Test plan.
-- AI model routing from the plan and review artifact.
+- AI workbench/model profile from the plan and review artifact.
 
 Identify what the code is supposed to do before looking at implementation details.
 
@@ -51,7 +51,7 @@ Check:
 Apply relevant standards:
 
 - `standards/engineering.md`
-- `standards/ai-model-routing.md`
+- `standards/ai-workbench.md`
 - `standards/frontend.md`
 - `standards/backend.md`
 - `standards/ui-ux.md`
@@ -87,14 +87,14 @@ Look for:
 - Unapproved dependencies.
 - False comments that do not match behavior.
 
-### 7. Review AI Model Routing
+### 7. Review AI Workbench And Models
 
 Check:
 
-- Every delivery step has `ai_provider`.
-- Standard implementation routes did not make final architecture, auth, billing, database, or security decisions.
-- Configured premium-review routing covered work touching auth, billing, payments, migrations, permissions, or customer data.
-- The final review route is equal or stronger than the implementation route.
+- The plan records the AI workbench/model profile.
+- High-risk architecture, auth, billing, database, and security decisions received high-risk review.
+- Configured high-risk review covered work touching auth, billing, payments, migrations, permissions, or customer data.
+- High-risk work used the configured `highRiskReview` model for final review.
 - The pull request includes a model usage summary.
 
 ### 8. Review Spec-Code Sync
@@ -149,6 +149,6 @@ Update review-checklist.md with findings and validation evidence.
 - [ ] Scope is controlled.
 - [ ] Acceptance criteria are covered.
 - [ ] Generated-code risks are checked.
-- [ ] AI model routing is checked.
+- [ ] AI workbench/model profile is checked.
 - [ ] Specs are synchronized.
 - [ ] Findings are recorded by severity.

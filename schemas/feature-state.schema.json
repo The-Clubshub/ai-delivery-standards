@@ -10,6 +10,7 @@
     "featureId": { "type": "string" },
     "title": { "type": "string" },
     "state": {
+      "description": "Current lifecycle state. requirements_approved and plan_approved are retained for legacy compatibility; normal approval flow advances directly to plan_draft or building.",
       "enum": [
         "intake",
         "requirements_draft",
@@ -37,4 +38,3 @@
     "blockers": { "type": "array" }
   }
 }
-

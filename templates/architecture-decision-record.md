@@ -28,22 +28,16 @@ Describe the forces that require a decision:
 
 State the decision clearly.
 
-## AI Model Routing
+## AI Workbench And Models
 
-Architecture decisions must use the configured premium-review route or an explicitly approved equal-or-stronger route.
+Architecture decisions must receive final review using the configured `highRiskReview` model.
 
-```yaml
-ai_provider:
-  provider: <project-configured-provider>
-  model: <project-configured-model>
-  risk_tier: premium_review
-  strength_rank: 3
-  reason: structural decisions have high long-term cost
-  requires_premium_review: true
-  reviewer_route: architecture
-```
+| Stage | Workbench | Model |
+| --- | --- | --- |
+| Planning | `<codex/claude/cursor>` | `<model>` |
+| High-risk review | `<codex/claude/cursor>` | `<model>` |
 
-## Options Considered
+## Options Considered## Options Considered
 
 | Option | Benefits | Costs | Decision |
 | --- | --- | --- | --- |

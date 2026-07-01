@@ -12,23 +12,26 @@ updated: YYYY-MM-DD
 
 ## Review Scope
 
-## AI Model Routing
+## AI Workbench And Models
 
-- [ ] Every step has an `ai_provider` field.
-- [ ] Final review route is equal or stronger than the implementation route.
-- [ ] Configured premium-review routing covered any work touching auth, billing, payments, migrations, permissions, or customer data.
+- [ ] Review used the configured `reviewing` model.
+- [ ] High-risk work used the configured `highRiskReview` model for final review.
 
-| Step | Provider | Model | Risk Tier | Reason | Reviewer |
-|---|---|---|---|---|---|
-| Planning | `<provider>` | `<model>` | `premium_review` | Architecture/product reasoning | N/A |
-| Implementation | `<provider>` | `<model>` | `standard_implementation` | Bounded implementation | `<code_review route>` |
-| Review | `<provider>` | `<model>` | `standard_review` | Final QA | N/A |
+| Stage | Workbench | Model |
+| --- | --- | --- |
+| Requirements | `<codex/claude/cursor>` | `<model>` |
+| Planning | `<codex/claude/cursor>` | `<model>` |
+| Build | `<codex/claude/cursor>` | `<model>` |
+| Review | `<codex/claude/cursor>` | `<model>` |
+| Test | `<codex/claude/cursor>` | `<model>` |
+| Sync and completion | `<codex/claude/cursor>` | `<model>` |
+| High-risk review | `<codex/claude/cursor>` | `<model>` |
 
 ## Pull Request Model Usage Summary
 
-| Step | Provider | Model | Risk Tier | Reason | Reviewer |
-|---|---|---|---|---|---|
-| `<step>` | `<provider>` | `<model>` | `<risk-tier>` | `<reason>` | `<reviewer>` |
+| Stage | Workbench | Model | Notes |
+| --- | --- | --- | --- |
+| `<stage>` | `<workbench>` | `<model>` | `<notes>` |
 
 ## Findings By Severity
 

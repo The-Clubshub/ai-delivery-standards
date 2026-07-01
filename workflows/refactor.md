@@ -48,7 +48,7 @@ Operations should be mechanical and reversible where possible:
 - Replace dependency.
 - Delete dead path.
 
-Every operation must declare `ai_provider`. Standard implementation routes may perform mechanical refactors, but configured premium-review routing must handle final architecture decisions and review any refactor touching auth, billing, payments, migrations, permissions, database schema, or customer data.
+Every refactor plan must record the AI workbench/model profile. Use the configured `highRiskReview` model for final architecture decisions and any refactor touching auth, billing, payments, migrations, permissions, database schema, or customer data.
 
 ### 4. Refactor In Small Steps
 
@@ -103,6 +103,6 @@ Process:
 - [ ] Refactor intent is documented.
 - [ ] Behavior-preserving boundary is explicit.
 - [ ] Safety tests exist.
-- [ ] AI model routing is declared and premium-review triggers are satisfied.
+- [ ] AI workbench/model profile is declared and high-risk review triggers are satisfied.
 - [ ] No unapproved feature behavior changed.
 - [ ] Specs and ADRs reflect final structure.

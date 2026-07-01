@@ -1,6 +1,6 @@
 # Workflow: Autonomous Feature Queue
 
-Use this workflow when one request contains multiple independent features or a backlog slice that an AI agent can implement without asking the user to approve each next step.
+Use this workflow when one request contains multiple independent features, a full product surface such as a website, or a backlog slice that an AI agent can implement without asking the user to approve each next step.
 
 This workflow does not replace specification-first delivery. It adds an execution mode for moving through several specified or specifiable features with disciplined validation, review, and stop conditions.
 
@@ -16,7 +16,31 @@ For large builds where the human wants to approve requirements once and then let
 }
 ```
 
-This is the same policy created by `ai-delivery init . --autonomous-after-requirements`.
+This is the same policy seeded as defaults by `ai-delivery init . --autonomous-after-requirements`; onboarding still confirms the gate choices explicitly.
+
+## Codex Goal Control
+
+When the selected workbench is Codex, run autonomous queue work under an active `/goal`.
+
+- Set or confirm the goal before selecting the first queue item.
+- The goal controls queue membership, priority, completion criteria, and when the batch can stop.
+- Every queue item must map back to the goal; remove or defer items that do not.
+- Do not clear the goal until all unblocked queue items needed for that goal are complete, or until the user changes or cancels it.
+- If `/goal` is unavailable, record the same objective at the top of `.ai/queues/active.md` and treat it as the controlling queue goal.
+
+## Original Request Scope
+
+The original user request is the batch scope. If the user asks for a full website, app, dashboard, onboarding flow, or similarly broad deliverable, the Planner Agent must produce one full-request plan before implementation starts.
+
+That plan must:
+
+- Decompose the full request into all known features, pages, flows, integrations, content areas, and validation work needed to satisfy the request.
+- Record the ordered feature queue in `.ai/queues/active.md`.
+- Mark any intentionally deferred item as `Deferred` with a reason tied to the original request.
+- Define completion criteria for the whole request, not only the first feature.
+- Identify dependencies and shared operations across queued features.
+
+When the user approves the plan or otherwise agrees to implement the request, that approval applies to every queued feature inside the original request. The agent must then run every unblocked queue item without asking for approval before each next feature. Ask again only when a stop condition applies, the user changes direction, or the next item is outside the original request.
 
 ## Outcome
 
@@ -46,13 +70,15 @@ Use `templates/feature-queue.md` for the queue log.
 ## Queue Rules
 
 - Maintain the queue explicitly.
+- The queue must cover the full original request before implementation starts.
 - Work one feature at a time.
 - Select the next feature from the queue without asking the user to continue.
 - Do not ask for approval before starting the next queued feature unless a stop condition applies.
+- Do not treat plan approval or "go ahead and implement" as approval for only the first queued feature.
 - Prefer dependency order first, then smallest safe feature, then highest user value.
 - Do not bundle unrelated feature implementations into one diff unless the specs share the same operation.
 - Keep each feature's artifacts synchronized before moving to the next feature.
-- Declare AI model routing for each feature before implementation starts.
+- Declare AI workbench/model profile for each feature before implementation starts.
 
 ## Stop Conditions
 
@@ -79,7 +105,7 @@ Before editing code for the feature, record:
 - Scope out.
 - Dependencies on earlier queue items.
 - Assumptions that are safe enough to proceed.
-- AI provider, model, reason, fallback model if any, and premium-review status.
+- AI workbench, stage model, and high-risk review status.
 
 The restatement should live in the feature spec and, when useful, in the queue log.
 
@@ -90,7 +116,7 @@ Implement the narrowest change that satisfies the acceptance criteria.
 Rules:
 
 - Follow the implementation plan operation by operation.
-- Follow each operation's `ai_provider` routing.
+- Follow the configured AI workbench/model profile.
 - Prefer existing project patterns and helpers.
 - Add abstractions only when they remove real complexity or match existing architecture.
 - Avoid opportunistic redesign, dependency additions, analytics, notifications, permissions, or UI paths not required by the spec.
@@ -177,7 +203,7 @@ Before moving to the next queue item, update the queue log and feature artifacts
 
 Pick the next unblocked feature in the queue and repeat the loop.
 
-The agent may announce the next selected feature for traceability, but must not wait for user approval before starting it unless a stop condition applies.
+The agent may announce the next selected feature for traceability, but must not wait for user approval before starting it unless a stop condition applies. The implementation agreement for the original request remains active until every unblocked queued feature needed for that request is complete, deferred with a recorded reason, or blocked by a stop condition.
 
 Only stop when:
 
@@ -208,7 +234,8 @@ Features:
 3. Add saved-search delete confirmation.
 
 Process:
-- Create or update `.ai/queues/active.md`.
+- Create or update `.ai/queues/active.md` as the full-request plan.
+- Include every feature needed for the original request before implementation starts.
 - For each feature, restate objective and acceptance criteria.
 - Create or update required feature artifacts.
 - Implement the smallest clean solution.
@@ -221,9 +248,9 @@ Process:
 
 ## Quality Gates
 
-- [ ] Feature queue is explicit and ordered.
+- [ ] Feature queue is explicit, ordered, and covers the full original request.
 - [ ] Each feature has required artifacts.
-- [ ] Each feature has AI model routing before implementation.
+- [ ] Each feature has AI workbench/model profile before implementation.
 - [ ] Acceptance criteria are testable.
 - [ ] Each completed feature has validation evidence.
 - [ ] Self-review is recorded.

@@ -72,6 +72,8 @@ ai-delivery init ../my-product
 
 This creates the standards bundle, V2 operating-system files, product docs, and first feature artifacts.
 
+For a broad greenfield request such as a full website or app, the first plan must cover the whole original request. Split the work into a feature queue, but do not treat the initial skeleton as the only approved scope unless the user explicitly narrowed the request.
+
 ### 2. Establish Standards Version
 
 Record:
@@ -92,7 +94,7 @@ Create `.ai/ai-delivery.md` with:
 - Required lifecycle states.
 - Agent behavior rules.
 - Approval gates.
-- AI model routing.
+- AI workbench/model profile.
 - Quality gates.
 
 ### 4. Define Initial Architecture
@@ -170,15 +172,21 @@ Do not plan until the requirements gate is satisfied. If `approvalPolicy.require
 
 If `approvalPolicy.requirements` is `not_required`, record `not_required` in `approval.md` and `state.json` and continue.
 
+Once the requirements gate is satisfied, move directly to `plan_draft` and start planning. Do not require `/continue`.
+
 ### 9. Satisfy Plan Gate
 
-Do not scaffold application code until the plan gate is satisfied and `plan.md` declares AI model routing for every operation. If `approvalPolicy.plan` is `human_required`, approve with:
+Do not scaffold application code until the plan gate is satisfied and `plan.md` declares AI workbench/model profile for every operation. If `approvalPolicy.plan` is `human_required`, approve with:
+
+For broad requests, the plan gate is not satisfied until the full original request is represented in the plan and `.ai/queues/active.md`.
 
 ```text
 /approve-plan
 ```
 
 If `approvalPolicy.plan` is `not_required`, record `not_required` in `approval.md` and `state.json` and continue.
+
+Once the plan gate is satisfied, move directly to `building` and start implementation. Do not require `/continue`.
 
 ### 10. Build, Review, Test, Complete
 
@@ -193,6 +201,8 @@ Follow:
 
 `/complete` requires human implementation approval when `approvalPolicy.implementation` is `human_required`. If it is `not_required`, the Sync Agent may complete after review and test evidence are recorded.
 
+Once the implementation gate is satisfied, move directly to `complete`. Do not require `/continue`.
+
 ## Quality Gates
 
 - [ ] `.ai/config.json` exists.
@@ -200,7 +210,7 @@ Follow:
 - [ ] `.ai/features/FEA-001-initial-product-skeleton/state.json` exists.
 - [ ] Requirements gate is satisfied before planning.
 - [ ] Plan gate is satisfied before building.
-- [ ] First feature plan includes AI model routing.
+- [ ] First feature plan includes AI workbench/model profile.
 - [ ] CI or validation commands are documented.
 - [ ] Security and accessibility baselines are defined.
 - [ ] Final specs match the created project skeleton.

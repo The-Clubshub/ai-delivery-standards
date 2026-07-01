@@ -15,15 +15,14 @@ source_spec: feature-spec.md
 
 Validate the assistant as a pipeline with deterministic seams. Unit test schema validation, classification decisions, evidence gating, and output parsing. Integration test retrieval permissions and API contracts. Component and accessibility test the UI. Add AI evaluation cases for grounded answers, refusals, insufficient evidence, ambiguous inputs, prompt injection, and schema compliance.
 
-## AI Model Routing
+## AI Workbench And Models
 
-| Step | Provider | Model | Risk Tier | Reason | Reviewer |
-|---|---|---|---|---|---|
-| Standard unit tests | Project configured | Standard implementation route | `standard_implementation` | Cost-effective deterministic coverage | Code review route |
-| Edge-case and injection evals | Project configured | Standard review route | `standard_review` | Failure-mode and safety reasoning | N/A |
-| Auth and tenant tests | Project configured | Premium review route | `premium_review` | Permission and customer-data boundary | N/A |
+| Stage | Workbench | Model |
+| --- | --- | --- |
+| Testing | Project configured | GPT-5.3 Codex |
+| High-risk review | Project configured | GPT-5.5 |
 
-## Test Matrix
+## Test Matrix## Test Matrix
 
 | Requirement Or Risk | Test Type | Test Case | Expected Result | Automation |
 | --- | --- | --- | --- | --- |

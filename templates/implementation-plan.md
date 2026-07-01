@@ -15,7 +15,7 @@ source_spec: feature-spec.md
 ## Implementation Rules
 
 - Implement only the approved scope in `feature-spec.md`.
-- Follow `standards/ai-model-routing.md` for every operation.
+- Follow the configured AI workbench and stage model profile.
 - Work operation by operation.
 - Update tests with the operation that changes behavior.
 - Stop and update the spec first if implementation needs to diverge.
@@ -27,24 +27,28 @@ source_spec: feature-spec.md
 - [ ] Feature spec reviewed.
 - [ ] Test plan reviewed.
 - [ ] Relevant standards identified.
-- [ ] AI model routing declared before work starts.
+- [ ] AI workbench/model selection declared before work starts.
 - [ ] Required secrets, services, test data, and environments are available.
 
-## AI Model Routing
+## AI Workbench And Models
 
-Every operation must include an `ai_provider` block that follows `standards/ai-model-routing.md`.
+| Stage | Workbench | Model |
+| --- | --- | --- |
+| Requirements | `<codex/claude/cursor>` | `<model>` |
+| Planning | `<codex/claude/cursor>` | `<model>` |
+| Build | `<codex/claude/cursor>` | `<model>` |
+| Review | `<codex/claude/cursor>` | `<model>` |
+| Test | `<codex/claude/cursor>` | `<model>` |
+| Sync and completion | `<codex/claude/cursor>` | `<model>` |
+| High-risk review | `<codex/claude/cursor>` | `<model>` |
 
-| Step | Provider | Model | Risk Tier | Reason | Reviewer |
-|---|---|---|---|---|---|
-| Planning | `<provider>` | `<model>` | `premium_review` | Architecture/product reasoning | N/A |
-| Implementation | `<provider>` | `<model>` | `standard_implementation` | Bounded implementation | `<code_review route>` |
-| Review | `<provider>` | `<model>` | `standard_review` | Final QA | N/A |
+Use `syncCompletion` for Sync Agent handoff and completion summaries. Use `highRiskReview` for final review when work touches auth, permissions, billing, payments, security, customer data, database schema, migrations, tenant boundaries, or architecture.
 
 ## Operation Plan
 
-| Step | Status | Operation | Provider | Model | Reviewer | Files Or Modules | Tests | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Not started | `<operation>` | `<provider>` | `<model>` | `<reviewer>` | `<files>` | `<tests>` | `<notes>` |
+| Step | Status | Operation | Stage Model | Files Or Modules | Tests | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | Not started | `<operation>` | `<model>` | `<files>` | `<tests>` | `<notes>` |
 
 Status values: `Not started`, `In progress`, `Blocked`, `Done`, `Deferred`.
 
@@ -54,19 +58,7 @@ Status values: `Not started`, `In progress`, `Blocked`, `Done`, `Deferred`.
 
 **Purpose:** `<why this step exists>`
 
-**AI Provider:**
-
-```yaml
-ai_provider:
-  provider: <project-configured-provider>
-  model: <project-configured-model>
-  risk_tier: premium_review | standard_review | standard_implementation | low_risk | other
-  strength_rank: <optional numeric strength, higher is stronger>
-  reason: <short explanation>
-  fallback_model: <optional backup model>
-  requires_premium_review: false
-  reviewer_route: <optional modelRouting route key>
-```
+**Stage Model:** `<model>`
 
 **Inputs:**
 
@@ -127,8 +119,8 @@ ai_provider:
 ## Completion Checklist
 
 - [ ] All operations complete or explicitly deferred.
-- [ ] AI model routing was followed for every operation.
-- [ ] Any work touching auth, billing, payments, migrations, permissions, or customer data received configured premium-review routing.
+- [ ] AI workbench/model selection was followed for every operation.
+- [ ] Any work touching auth, billing, payments, migrations, permissions, customer data, database schema, tenant boundaries, or architecture received final review with the configured `highRiskReview` model.
 - [ ] Tests added or updated.
 - [ ] Validation commands pass.
 - [ ] Review checklist completed.

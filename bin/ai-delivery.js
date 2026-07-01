@@ -2,6 +2,9 @@
 
 const fs = require("fs");
 const path = require("path");
+const readline = require("readline");
+const https = require("https");
+const { execFile } = require("child_process");
 const { handleLoopCommand } = require("../lib/loop-engine");
 
 const repoRoot = path.resolve(__dirname, "..");
@@ -53,8 +56,8 @@ const APPROVAL_GATE_LABELS = {
   implementation: "Implementation"
 };
 const APPROVAL_GATE_TRANSITIONS = {
-  requirements: "requirements_pending_review -> requirements_approved",
-  plan: "plan_pending_review -> plan_approved",
+  requirements: "requirements_pending_review -> plan_draft",
+  plan: "plan_pending_review -> building",
   implementation: "ready_for_human_review -> complete"
 };
 const APPROVAL_GATE_COMMANDS = {
@@ -72,6 +75,71 @@ const DEFAULT_APPROVAL_POLICY = {
   plan: "human_required",
   implementation: "human_required"
 };
+
+const WORKBENCH_CHOICES = [
+  {
+    key: "codex",
+    label: "Codex Desktop/CLI",
+    description: "Run requirements, planning, build, review, and test work in Codex."
+  },
+  {
+    key: "claude",
+    label: "Claude Desktop/CLI",
+    description: "Run requirements, planning, build, review, and test work in Claude."
+  },
+  {
+    key: "cursor",
+    label: "Cursor",
+    description: "Run requirements, planning, build, review, and test work in Cursor."
+  }
+];
+
+const WORKBENCH_MANUAL_MODEL_CHOICE = "__manual__";
+const CLAUDE_MODELS_URL = "https://api.anthropic.com/v1/models";
+const OPENAI_MODELS_URL = "https://api.openai.com/v1/models";
+const WORKBENCH_MODELS_CACHE_TTL_MS = 5 * 60 * 1000;
+const WORKBENCH_MODELS_TIMEOUT_MS = 2500;
+const WORKBENCH_MODELS_CACHE = new Map();
+const CODEX_FALLBACK_MODELS = ["GPT-5.5", "GPT-5.3 Codex", "GPT-5.4 mini"];
+
+const STAGE_MODEL_FIELDS = [
+  {
+    key: "requirements",
+    label: "Requirements",
+    defaultModel: "GPT-5.5"
+  },
+  {
+    key: "planning",
+    label: "Planning",
+    defaultModel: "GPT-5.5"
+  },
+  {
+    key: "building",
+    label: "Building",
+    defaultModel: "GPT-5.3 Codex"
+  },
+  {
+    key: "reviewing",
+    label: "Reviewing",
+    defaultModel: "GPT-5.5"
+  },
+  {
+    key: "testing",
+    label: "Testing",
+    defaultModel: "GPT-5.3 Codex"
+  },
+  {
+    key: "syncCompletion",
+    label: "Sync and completion",
+    defaultModel: "GPT-5.4 mini"
+  },
+  {
+    key: "highRiskReview",
+    label: "High-risk review",
+    defaultModel: "GPT-5.5"
+  }
+];
+
 const APPROVAL_POLICY_ALIASES = {
   required: "human_required",
   "human-required": "human_required",
@@ -87,166 +155,36 @@ const APPROVAL_POLICY_ALIASES = {
   false: "not_required"
 };
 
-const DEFAULT_AI_MODEL_ROUTING_ROWS = [
-  {
-    step: "Planning",
-    provider: "Project configured",
-    model: "Premium review route",
-    riskTier: "premium_review",
-    reason: "Architecture/product reasoning",
-    reviewer: "N/A"
-  },
-  {
-    step: "Implementation",
-    provider: "Project configured",
-    model: "Standard implementation route",
-    riskTier: "standard_implementation",
-    reason: "Bounded implementation",
-    reviewer: "Configured review route"
-  },
-  {
-    step: "Review",
-    provider: "Project configured",
-    model: "Review route",
-    riskTier: "standard_review",
-    reason: "Final QA",
-    reviewer: "N/A"
-  }
-];
-
-const DEFAULT_MODEL_ROUTING = {
-  product_strategy: {
-    provider: "project-configured",
-    model: "premium-review",
-    risk_tier: "premium_review",
-    strength_rank: 3,
-    reason: "high-level reasoning and product judgement",
-    requires_premium_review: true,
-    reviewer_route: "product_strategy"
-  },
-  architecture: {
-    provider: "project-configured",
-    model: "premium-review",
-    risk_tier: "premium_review",
-    strength_rank: 3,
-    reason: "structural decisions have high long-term cost",
-    requires_premium_review: true,
-    reviewer_route: "architecture"
-  },
-  database_schema: {
-    provider: "project-configured",
-    model: "premium-review",
-    risk_tier: "premium_review",
-    strength_rank: 3,
-    reason: "schema mistakes are expensive to reverse",
-    requires_premium_review: true,
-    reviewer_route: "database_schema"
-  },
-  implementation: {
-    provider: "project-configured",
-    model: "standard-implementation",
-    risk_tier: "standard_implementation",
-    strength_rank: 1,
-    reason: "cost-effective for bounded implementation",
-    fallback_model: "premium-review",
-    requires_premium_review: false,
-    reviewer_route: "code_review"
-  },
-  refactoring: {
-    provider: "project-configured",
-    model: "standard-implementation",
-    risk_tier: "standard_implementation",
-    strength_rank: 1,
-    reason: "good for repetitive code changes",
-    fallback_model: "premium-review",
-    requires_premium_review: false,
-    reviewer_route: "code_review"
-  },
-  unit_tests: {
-    provider: "project-configured",
-    model: "standard-implementation",
-    risk_tier: "standard_implementation",
-    strength_rank: 1,
-    reason: "cost-effective for standard test coverage",
-    fallback_model: "premium-review",
-    requires_premium_review: false,
-    reviewer_route: "code_review"
-  },
-  edge_case_tests: {
-    provider: "project-configured",
-    model: "standard-review",
-    risk_tier: "standard_review",
-    strength_rank: 2,
-    reason: "better reasoning around failure modes",
-    requires_premium_review: false
-  },
-  code_review: {
-    provider: "project-configured",
-    model: "standard-review",
-    risk_tier: "standard_review",
-    strength_rank: 2,
-    reason: "final quality gate",
-    requires_premium_review: false
-  },
-  security_review: {
-    provider: "project-configured",
-    model: "premium-review",
-    risk_tier: "premium_review",
-    strength_rank: 3,
-    reason: "security-sensitive work must use the strongest configured reviewer",
-    requires_premium_review: true,
-    reviewer_route: "security_review"
-  },
-  auth_billing_payments: {
-    provider: "project-configured",
-    model: "premium-review",
-    risk_tier: "premium_review",
-    strength_rank: 3,
-    reason: "high-risk business-critical code",
-    requires_premium_review: true,
-    reviewer_route: "auth_billing_payments"
-  },
-  documentation: {
-    provider: "project-configured",
-    model: "low-risk",
-    risk_tier: "low_risk",
-    strength_rank: 1,
-    reason: "low-risk text generation",
-    fallback_model: "standard-review",
-    requires_premium_review: false
-  },
-  marketing_copy: {
-    provider: "project-configured",
-    model: "premium-review",
-    risk_tier: "premium_review",
-    strength_rank: 3,
-    reason: "stronger taste, positioning and brand judgement",
-    requires_premium_review: true,
-    reviewer_route: "marketing_copy"
-  }
+const DEFAULT_AI_WORKBENCH = {
+  provider: "codex",
+  mode: "desktop_or_cli",
+  stageModels: STAGE_MODEL_FIELDS.reduce((models, field) => {
+    models[field.key] = field.defaultModel;
+    return models;
+  }, {})
 };
 
-const REQUIRED_MODEL_ROUTING_KEYS = Object.keys(DEFAULT_MODEL_ROUTING);
+main(process.argv.slice(2)).catch((error) => {
+  fail(error.message);
+});
 
-main(process.argv.slice(2));
-
-function main(argv) {
+async function main(argv) {
   const command = argv[0];
 
   try {
     if (command === undefined) {
-      initProject([]);
+      await initProject([]);
       return;
     }
 
     if (command.startsWith("--") && !["--help", "-h", "--version", "-v"].includes(command)) {
-      initProject(argv);
+      await initProject(argv);
       return;
     }
 
     switch (command) {
       case "init":
-        initProject(argv.slice(1));
+        await initProject(argv.slice(1));
         break;
       case "sync":
         syncStandards(argv.slice(1));
@@ -279,13 +217,14 @@ function main(argv) {
   }
 }
 
-function initProject(argv) {
+async function initProject(argv) {
   const options = parseArgs(argv, {
     boolean: ["force", "dry-run", "autonomous-after-requirements"],
     string: [
       "standards-path",
       "docs-path",
       "ai-path",
+      "feature-root",
       "feature-id",
       "feature-name",
       "approval-policy",
@@ -298,20 +237,33 @@ function initProject(argv) {
   const target = path.resolve(options.positionals[0] || ".");
   const existingConfig = readConfig(target);
   const pathConfig = options.force ? {} : existingConfig;
-  const aiPath = normalizeRelative(options["ai-path"] || pathConfig.aiPath || DEFAULT_AI_PATH);
-  const standardsPath = normalizeRelative(options["standards-path"] || pathConfig.standardsPath || DEFAULT_STANDARDS_PATH);
-  const docsPath = normalizeDocsPath(options["docs-path"] || pathConfig.docsPath, aiPath);
   const agentInstructionPath = DEFAULT_AGENT_INSTRUCTION_PATH;
-  const featureId = options["feature-id"] || "FEA-001";
-  const featureName = options["feature-name"] || "Initial Product Skeleton";
   const dryRun = Boolean(options["dry-run"]);
-  const approvalPolicy = resolveApprovalPolicyOptions(pathConfig.approvalPolicy, options);
+  const aiPath = normalizeRelative(options["ai-path"] || pathConfig.aiPath || DEFAULT_AI_PATH);
+  const docsPath = normalizeDocsPath(options["docs-path"] || pathConfig.docsPath, aiPath);
+  const onboarding = await resolveInitOnboarding({
+    target,
+    options,
+    paths: {
+      aiPath,
+      standardsPath: normalizeRelative(options["standards-path"] || pathConfig.standardsPath || DEFAULT_STANDARDS_PATH),
+      docsPath,
+      featurePath: normalizeFeaturePath(options["feature-root"] || pathConfig.featurePath, docsPath, aiPath),
+      decisionPath: normalizeDocsChildPath(pathConfig.decisionPath, docsPath, aiPath, "decisions")
+    },
+    initialFeature: {
+      id: options["feature-id"] || "FEA-001",
+      name: options["feature-name"] || "Initial Product Skeleton"
+    },
+    approvalPolicy: resolveApprovalPolicyOptions(pathConfig.approvalPolicy, options),
+    aiWorkbench: pathConfig.aiWorkbench
+  });
 
   ensureDirectory(target, dryRun);
   syncStandards([
     target,
     "--standards-path",
-    standardsPath,
+    onboarding.paths.standardsPath,
     "--skip-agent",
     ...(options.force ? ["--force"] : []),
     ...(dryRun ? ["--dry-run"] : [])
@@ -319,33 +271,35 @@ function initProject(argv) {
 
   const configPath = path.join(target, ".ai-delivery.json");
   const config = buildProjectConfig({
-    standardsPath,
-    docsPath,
-    aiPath,
+    standardsPath: onboarding.paths.standardsPath,
+    docsPath: onboarding.paths.docsPath,
+    aiPath: onboarding.paths.aiPath,
     agentInstructionPath,
-    approvalPolicy,
-    featurePath: pathConfig.featurePath,
+    approvalPolicy: onboarding.approvalPolicy,
+    aiWorkbench: onboarding.aiWorkbench,
+    featurePath: onboarding.paths.featurePath,
     legacyFeaturePath: pathConfig.legacyFeaturePath,
-    decisionPath: pathConfig.decisionPath,
+    decisionPath: onboarding.paths.decisionPath,
     requiredFeatureArtifacts: pathConfig.requiredFeatureArtifacts,
     legacyFeatureArtifacts: pathConfig.legacyFeatureArtifacts,
     commandProtocol: pathConfig.commandProtocol,
     standardsVersion: pathConfig.standardsVersion
   });
-  writeText(configPath, `${JSON.stringify(config, null, 2)}\n`, { dryRun, overwrite: options.force });
+  writeText(configPath, `${JSON.stringify(config, null, 2)}\n`, { dryRun, overwrite: true });
 
-  ensureAiOperatingSystem(target, config, { dryRun, overwrite: options.force });
-  ensureAgentInstructions(target, config, { dryRun, overwrite: options.force });
+  ensureGitignore(target, config.aiPath, { dryRun });
+  ensureAiOperatingSystem(target, config, { dryRun, overwrite: options.force, overwriteConfig: true });
+  ensureAgentInstructions(target, config, { dryRun, overwrite: true });
 
-  const aiDeliveryDoc = path.join(target, docsPath, "ai-delivery.md");
-  writeText(aiDeliveryDoc, productAiDeliveryTemplate(config), { dryRun, overwrite: options.force });
+  const aiDeliveryDoc = path.join(target, config.docsPath, "ai-delivery.md");
+  writeText(aiDeliveryDoc, productAiDeliveryTemplate(config), { dryRun, overwrite: true });
 
-  const architectureDoc = path.join(target, docsPath, "architecture", "overview.md");
+  const architectureDoc = path.join(target, config.docsPath, "architecture", "overview.md");
   writeText(architectureDoc, architectureOverviewTemplate(), { dryRun, overwrite: options.force });
 
   createFeature([
-    featureId,
-    featureName,
+    onboarding.initialFeature.id,
+    onboarding.initialFeature.name,
     "--target",
     target,
     "--feature-root",
@@ -434,9 +388,9 @@ function createFeature(argv, configOverride = null) {
 
   writeJson(path.join(featureFolder, "state.json"), featureStateTemplate(featureId, featureName, featureConfig.approvalPolicy), { dryRun, overwrite: options.force });
   writeText(path.join(featureFolder, "requirements.md"), featureRequirementsTemplate(featureId, featureName), { dryRun, overwrite: options.force });
-  writeText(path.join(featureFolder, "plan.md"), featurePlanTemplate(featureId, featureName, featureConfig.approvalPolicy), { dryRun, overwrite: options.force });
-  writeText(path.join(featureFolder, "tests.md"), featureTestsTemplate(featureId, featureName), { dryRun, overwrite: options.force });
-  writeText(path.join(featureFolder, "review.md"), featureReviewTemplate(featureId, featureName), { dryRun, overwrite: options.force });
+  writeText(path.join(featureFolder, "plan.md"), featurePlanTemplate(featureId, featureName, featureConfig.approvalPolicy, featureConfig.aiWorkbench), { dryRun, overwrite: options.force });
+  writeText(path.join(featureFolder, "tests.md"), featureTestsTemplate(featureId, featureName, featureConfig.aiWorkbench), { dryRun, overwrite: options.force });
+  writeText(path.join(featureFolder, "review.md"), featureReviewTemplate(featureId, featureName, featureConfig.aiWorkbench), { dryRun, overwrite: options.force });
   writeText(path.join(featureFolder, "approval.md"), featureApprovalTemplate(featureId, featureName, featureConfig.approvalPolicy), { dryRun, overwrite: options.force });
   writeText(path.join(featureFolder, "memory.md"), featureMemoryTemplate(featureId, featureName), { dryRun, overwrite: options.force });
   writeText(path.join(featureFolder, "activity.md"), featureActivityTemplate(featureId, featureName), { dryRun, overwrite: options.force });
@@ -464,6 +418,7 @@ function doctor(argv) {
   const checks = [];
 
   checks.push(checkExists(path.join(target, ".ai-delivery.json"), "config .ai-delivery.json"));
+  checks.push(checkFileContains(path.join(target, ".gitignore"), ".ai/", "git ignores local AI operating-system files"));
   checks.push(checkExists(path.join(aiPath, "config.json"), "V2 config .ai/config.json"));
   checks.push(checkExists(path.join(aiPath, "registry.json"), "V2 feature registry"));
   checks.push(checkExists(path.join(aiPath, "state.json"), "V2 project state"));
@@ -474,11 +429,12 @@ function doctor(argv) {
   checks.push(checkExists(path.join(standardsPath, "commands", "command-protocol.md"), "V2 command protocol"));
   checks.push(checkExists(path.join(standardsPath, "roles", "builder-agent.md"), "V2 role definitions"));
   checks.push(checkExists(path.join(standardsPath, "schemas", "feature-state.schema.json"), "V2 feature state schema"));
-  checks.push(checkExists(path.join(standardsPath, "schemas", "model-routing.schema.json"), "model routing schema"));
+  checks.push(checkExists(path.join(standardsPath, "schemas", "ai-workbench.schema.json"), "AI workbench schema"));
   checks.push(checkExists(path.join(standardsPath, "templates", "v2", "feature", "requirements.md"), "V2 requirements template"));
-  checks.push(checkExists(path.join(standardsPath, "standards", "ai-model-routing.md"), "AI model routing standard"));
+  checks.push(checkExists(path.join(standardsPath, "standards", "ai-workbench.md"), "AI workbench standard"));
+  checks.push(checkExists(path.join(standardsPath, "standards", "codex-goal-mode.md"), "Codex goal mode standard"));
   checks.push(checkExists(path.join(standardsPath, "standards", "accessibility.md"), "accessibility standards"));
-  checks.push(...checkModelRouting(config.modelRouting));
+  checks.push(...checkAiWorkbench(config.aiWorkbench));
   checks.push(checkExists(path.join(docsPath, "ai-delivery.md"), "product AI delivery guide"));
   checks.push(checkExists(path.join(docsPath, "architecture", "overview.md"), "architecture overview"));
   checks.push(checkExists(path.join(target, config.decisionPath || path.posix.join(config.aiPath || DEFAULT_AI_PATH, "decisions")), "architecture decisions folder"));
@@ -496,8 +452,8 @@ function doctor(argv) {
     for (const file of V2_FEATURE_ARTIFACTS) {
       checks.push(checkExists(path.join(firstFeature, file), `V2 feature artifact ${file}`));
     }
-    checks.push(checkFileContains(path.join(firstFeature, "plan.md"), "## AI Model Routing", "V2 feature plan AI model routing"));
-    checks.push(checkFileContains(path.join(firstFeature, "review.md"), "## AI Model Routing", "V2 feature review AI model routing"));
+    checks.push(checkFileContains(path.join(firstFeature, "plan.md"), "## AI Workbench And Models", "V2 feature plan AI workbench and models"));
+    checks.push(checkFileContains(path.join(firstFeature, "review.md"), "## AI Workbench And Models", "V2 feature review AI workbench and models"));
   }
 
   for (const check of checks) {
@@ -594,6 +550,22 @@ function writeJson(filePath, value, options = {}) {
   writeText(filePath, `${JSON.stringify(value, null, 2)}\n`, options);
 }
 
+function ensureGitignore(target, aiPath = DEFAULT_AI_PATH, options = {}) {
+  const gitignorePath = path.join(target, ".gitignore");
+  const entries = Array.from(new Set([`${normalizeRelative(aiPath).replace(/\/+$/, "")}/`, ".ai/"]));
+  const existing = fs.existsSync(gitignorePath) ? fs.readFileSync(gitignorePath, "utf8") : "";
+  const lines = existing.split(/\r?\n/).map((line) => line.trim());
+  const missing = entries.filter((entry) => !lines.includes(entry));
+  if (missing.length === 0) {
+    console.log(`kept ${path.relative(process.cwd(), gitignorePath)}`);
+    return;
+  }
+
+  const prefix = existing && !existing.endsWith("\n") ? "\n" : "";
+  const content = `${existing}${prefix}${missing.join("\n")}\n`;
+  writeText(gitignorePath, content, { dryRun: options.dryRun, overwrite: true });
+}
+
 function ensureAgentInstructions(target, config, options = {}) {
   const agentDoc = path.join(target, DEFAULT_AGENT_INSTRUCTION_PATH);
   writeText(agentDoc, productAgentTemplate(config), { dryRun: options.dryRun, overwrite: Boolean(options.overwrite) });
@@ -607,7 +579,7 @@ function ensureAiOperatingSystem(target, config, options = {}) {
   ensureDirectory(path.join(aiPath, "agents"), options.dryRun);
   ensureDirectory(path.join(target, config.decisionPath), options.dryRun);
 
-  writeJson(path.join(aiPath, "config.json"), aiConfigTemplate(config), { dryRun: options.dryRun, overwrite: options.overwrite });
+  writeJson(path.join(aiPath, "config.json"), aiConfigTemplate(config), { dryRun: options.dryRun, overwrite: Boolean(options.overwriteConfig || options.overwrite) });
   writeJson(path.join(aiPath, "registry.json"), featureRegistryTemplate(), { dryRun: options.dryRun, overwrite: options.overwrite });
   writeJson(path.join(aiPath, "state.json"), projectStateTemplate(), { dryRun: options.dryRun, overwrite: options.overwrite });
 
@@ -628,6 +600,7 @@ function buildProjectConfig(overrides = {}) {
   const featurePath = normalizeFeaturePath(overrides.featurePath, docsPath, aiPath);
   const legacyFeaturePath = normalizeRelative(overrides.legacyFeaturePath || "docs/features");
   const approvalPolicy = normalizeApprovalPolicy(overrides.approvalPolicy);
+  const aiWorkbench = normalizeAiWorkbench(overrides.aiWorkbench);
 
   return {
     operatingSystemVersion: "v2",
@@ -643,9 +616,7 @@ function buildProjectConfig(overrides = {}) {
       : V2_FEATURE_ARTIFACTS,
     legacyFeatureArtifacts: LEGACY_FEATURE_TEMPLATE_FILES,
     approvalPolicy,
-    modelRouting: overrides.modelRouting && typeof overrides.modelRouting === "object"
-      ? overrides.modelRouting
-      : DEFAULT_MODEL_ROUTING,
+    aiWorkbench,
     commandProtocol: overrides.commandProtocol || "universal-command-protocol-v2",
     standardsVersion: overrides.standardsVersion || packageJson.version || "local"
   };
@@ -680,6 +651,457 @@ function resolveApprovalPolicyOptions(basePolicy, options) {
   }
 
   return normalizeApprovalPolicy({ ...normalizeApprovalPolicy(basePolicy), ...optionPolicy });
+}
+
+async function resolveInitOnboarding(input) {
+  const result = {
+    paths: { ...input.paths },
+    initialFeature: { ...input.initialFeature },
+    approvalPolicy: normalizeApprovalPolicy(input.approvalPolicy),
+    aiWorkbench: normalizeAiWorkbench(input.aiWorkbench)
+  };
+
+  if (!process.stdin.isTTY || !process.stdout.isTTY) {
+    fail("init requires interactive onboarding. Run it in a terminal so the project config can be chosen explicitly.");
+  }
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  try {
+    console.log("");
+    console.log("AI delivery setup");
+    console.log("Answer a few config questions. Pick one desktop/CLI workbench, then choose models for each delivery stage.");
+    console.log("");
+
+    result.paths = await askInitPaths(rl, result.paths);
+    result.initialFeature = await askInitialFeature(rl, result.initialFeature);
+    result.approvalPolicy = await askApprovalPolicy(rl, result.approvalPolicy);
+    result.aiWorkbench = await askAiWorkbench(rl, result.aiWorkbench);
+    console.log("");
+  } finally {
+    rl.close();
+  }
+
+  return result;
+}
+
+async function askInitPaths(rl, currentPaths) {
+  console.log("");
+  console.log("Project paths");
+  const aiPath = normalizeRelative(await askText(rl, "AI operating-system path", currentPaths.aiPath || DEFAULT_AI_PATH));
+  const standardsPath = normalizeRelative(await askText(rl, "Vendored standards path", currentPaths.standardsPath || DEFAULT_STANDARDS_PATH));
+  const docsPath = normalizeDocsPath(await askText(rl, "Product docs path", currentPaths.docsPath || aiPath), aiPath);
+  const featurePath = normalizeFeaturePath(await askText(rl, "Feature lifecycle root", currentPaths.featurePath || path.posix.join(docsPath, "features")), docsPath, aiPath);
+  const decisionPath = normalizeDocsChildPath(await askText(rl, "Architecture decisions path", currentPaths.decisionPath || path.posix.join(docsPath, "decisions")), docsPath, aiPath, "decisions");
+  return {
+    aiPath,
+    standardsPath,
+    docsPath,
+    featurePath,
+    decisionPath
+  };
+}
+
+async function askInitialFeature(rl, currentFeature) {
+  console.log("");
+  console.log("Initial feature");
+  return {
+    id: await askText(rl, "Initial feature ID", currentFeature.id || "FEA-001"),
+    name: await askText(rl, "Initial feature name", currentFeature.name || "Initial Product Skeleton")
+  };
+}
+
+async function askApprovalPolicy(rl, currentPolicy) {
+  console.log("");
+  console.log("Human approval gates");
+  const policy = normalizeApprovalPolicy(currentPolicy);
+  const updated = {};
+  for (const gate of APPROVAL_GATES) {
+    const humanRequired = await askYesNo(
+      rl,
+      `Require mandatory human approval for ${APPROVAL_GATE_LABELS[gate]}?`,
+      policy[gate] === "human_required"
+    );
+    updated[gate] = humanRequired ? "human_required" : "not_required";
+  }
+  return normalizeApprovalPolicy(updated);
+}
+
+async function askAiWorkbench(rl, currentWorkbench) {
+  console.log("");
+  console.log("AI workbench");
+  console.log("Choose the desktop app or CLI that will run AI delivery work.");
+  const current = normalizeAiWorkbench(currentWorkbench);
+  const workbenchChoice = await askChoice(rl, "Choose the workbench", WORKBENCH_CHOICES, current.provider);
+  const discoveredModels = await discoverWorkbenchModels(workbenchChoice.key);
+  const useOneModel = await askYesNo(rl, "Use one model for every stage?", allStageModelsMatch(current.stageModels));
+  const stageModels = {};
+
+  if (useOneModel) {
+    const model = await askWorkbenchModel(
+      rl,
+      "Model for every stage",
+      workbenchChoice.key,
+      firstStageModel(current.stageModels),
+      discoveredModels
+    );
+    for (const field of STAGE_MODEL_FIELDS) {
+      stageModels[field.key] = model;
+    }
+    return normalizeAiWorkbench({
+      provider: workbenchChoice.key,
+      mode: "desktop_or_cli",
+      stageModels
+    });
+  }
+
+  console.log("");
+  console.log("Stage models");
+  for (const field of STAGE_MODEL_FIELDS) {
+    stageModels[field.key] = await askWorkbenchModel(
+      rl,
+      `${field.label} model`,
+      workbenchChoice.key,
+      current.stageModels[field.key] || field.defaultModel,
+      discoveredModels
+    );
+  }
+
+  return normalizeAiWorkbench({
+    provider: workbenchChoice.key,
+    mode: "desktop_or_cli",
+    stageModels
+  });
+}
+
+function normalizeAiWorkbench(aiWorkbench = DEFAULT_AI_WORKBENCH) {
+  const configured = aiWorkbench && typeof aiWorkbench === "object" && !Array.isArray(aiWorkbench)
+    ? aiWorkbench
+    : {};
+  const provider = normalizeWorkbenchProvider(configured.provider || DEFAULT_AI_WORKBENCH.provider);
+  const configuredModels = configured.stageModels && typeof configured.stageModels === "object"
+    ? configured.stageModels
+    : {};
+  const stageModels = {};
+  for (const field of STAGE_MODEL_FIELDS) {
+    stageModels[field.key] = normalizeModelName(configuredModels[field.key] || DEFAULT_AI_WORKBENCH.stageModels[field.key]);
+  }
+  return {
+    provider,
+    mode: "desktop_or_cli",
+    stageModels
+  };
+}
+
+function normalizeWorkbenchProvider(provider) {
+  const value = String(provider || "").trim().toLowerCase();
+  if (value === "claude-code" || value === "claude-desktop" || value === "claude-cli") return "claude";
+  if (WORKBENCH_CHOICES.some((choice) => choice.key === value)) return value;
+  return DEFAULT_AI_WORKBENCH.provider;
+}
+
+function buildWorkbenchModelChoices(provider, discoveredModels = [], currentModel = "workbench-default") {
+  const normalizedCurrent = normalizeModelName(currentModel);
+  const modelSet = normalizeModelNames(discoveredModels);
+  const choices = [];
+  const seen = new Set();
+
+  const addChoice = (model, label, description) => {
+    const normalizedModel = normalizeModelName(model);
+    if (!normalizedModel || seen.has(normalizedModel)) return;
+    seen.add(normalizedModel);
+    choices.push({
+      key: normalizedModel,
+      label: label || normalizedModel,
+      description: description || "Use this model"
+    });
+  };
+
+  if (provider === "codex") {
+    addChoice("workbench-default", "workbench-default", "Use the model currently selected in Codex");
+  } else {
+    addChoice("workbench-default", "workbench-default", "Use the model currently selected in the workbench");
+  }
+
+  for (const model of modelSet) {
+    addChoice(model);
+  }
+
+  if (normalizedCurrent && !seen.has(normalizedCurrent)) {
+    addChoice(normalizedCurrent, normalizedCurrent, "Configured value for this stage");
+  }
+
+  addChoice(WORKBENCH_MANUAL_MODEL_CHOICE, "Custom model id", "Enter a model id manually");
+  return choices;
+}
+
+function normalizeModelNames(values) {
+  const unique = new Set();
+  for (const value of Array.isArray(values) ? values : []) {
+    const normalized = normalizeModelName(value);
+    if (normalized !== "workbench-default") {
+      unique.add(normalized);
+    }
+  }
+  return Array.from(unique).sort((a, b) => a.localeCompare(b));
+}
+
+async function askWorkbenchModel(rl, label, provider, defaultModel, discoveredModels = []) {
+  const defaultLabel = normalizeModelName(defaultModel);
+  const choices = buildWorkbenchModelChoices(provider, discoveredModels, defaultLabel);
+  const selected = await askChoice(rl, `${label}`, choices, defaultLabel);
+  if (selected.key === WORKBENCH_MANUAL_MODEL_CHOICE) {
+    return await askText(
+      rl,
+      `${label} (manual)`,
+      defaultLabel,
+      { required: true }
+    );
+  }
+  return selected.key;
+}
+
+async function discoverWorkbenchModels(provider) {
+  const normalized = normalizeWorkbenchProvider(provider);
+  const cached = WORKBENCH_MODELS_CACHE.get(normalized);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.models;
+  }
+
+  let models = [];
+  if (normalized === "claude") {
+    models = await discoverClaudeModels();
+  } else if (normalized === "cursor") {
+    models = await discoverCursorModels();
+  } else if (normalized === "codex") {
+    models = await discoverCodexModels();
+  }
+
+  const normalizedModels = normalizeModelNames(models);
+  WORKBENCH_MODELS_CACHE.set(normalized, {
+    models: normalizedModels,
+    expiresAt: Date.now() + WORKBENCH_MODELS_CACHE_TTL_MS
+  });
+  return normalizedModels;
+}
+
+async function discoverCodexModels() {
+  try {
+    const response = await execJson("codex", ["debug", "models"], {
+      timeout: WORKBENCH_MODELS_TIMEOUT_MS
+    });
+    const models = Array.isArray(response?.models)
+      ? response.models
+        .filter((item) => item?.visibility !== "hidden")
+        .map((item) => item?.slug || item?.id || item?.model)
+        .filter(Boolean)
+      : [];
+    return models.length > 0 ? models : CODEX_FALLBACK_MODELS;
+  } catch (error) {
+    return CODEX_FALLBACK_MODELS;
+  }
+}
+
+async function discoverClaudeModels() {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return [];
+
+  try {
+    const response = await fetchJson(CLAUDE_MODELS_URL, {
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01"
+      },
+      timeout: WORKBENCH_MODELS_TIMEOUT_MS
+    });
+    return Array.isArray(response?.data)
+      ? response.data.map((item) => (typeof item === "string" ? item : item?.id)).filter(Boolean)
+      : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+async function discoverCursorModels() {
+  const models = [];
+  const openAiModels = await discoverOpenAiModels();
+  const claudeModels = await discoverClaudeModels();
+  if (openAiModels.length > 0) {
+    models.push(...openAiModels);
+  }
+  if (claudeModels.length > 0) {
+    models.push(...claudeModels);
+  }
+  return models;
+}
+
+async function discoverOpenAiModels() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return [];
+
+  try {
+    const response = await fetchJson(OPENAI_MODELS_URL, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`
+      },
+      timeout: WORKBENCH_MODELS_TIMEOUT_MS
+    });
+    return Array.isArray(response?.data) ? response.data.map((item) => item?.id).filter(Boolean) : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function execJson(command, args = [], { timeout = WORKBENCH_MODELS_TIMEOUT_MS } = {}) {
+  return new Promise((resolve, reject) => {
+    execFile(command, args, {
+      timeout,
+      maxBuffer: 10 * 1024 * 1024
+    }, (error, stdout) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      try {
+        resolve(JSON.parse(stdout));
+      } catch (parseError) {
+        reject(parseError);
+      }
+    });
+  });
+}
+
+function fetchJson(url, { headers = {}, timeout = WORKBENCH_MODELS_TIMEOUT_MS } = {}) {
+  return new Promise((resolve, reject) => {
+    const request = https.request(url, {
+      method: "GET",
+      timeout,
+      headers: {
+        Accept: "application/json",
+        ...headers
+      }
+    }, (response) => {
+      let body = "";
+      response.on("data", (chunk) => {
+        body += String(chunk);
+      });
+      response.on("end", () => {
+        try {
+          const parsed = body ? JSON.parse(body) : {};
+          resolve(parsed);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+
+    request.on("timeout", () => {
+      request.destroy(new Error("Model discovery request timed out"));
+    });
+    request.on("error", (error) => {
+      reject(error);
+    });
+    request.end();
+  });
+}
+
+function normalizeModelName(value) {
+  const model = String(value || "").trim();
+  return model || "workbench-default";
+}
+
+function allStageModelsMatch(stageModels = {}) {
+  const models = STAGE_MODEL_FIELDS.map((field) => stageModels[field.key]).filter(Boolean);
+  return models.length > 0 && models.every((model) => model === models[0]);
+}
+
+function firstStageModel(stageModels = {}) {
+  for (const field of STAGE_MODEL_FIELDS) {
+    if (stageModels[field.key]) return stageModels[field.key];
+  }
+  return "workbench-default";
+}
+
+async function askChoice(rl, heading, choices, defaultKey) {
+  const defaultIndex = Math.max(0, choices.findIndex((choice) => choice.key === defaultKey));
+  while (true) {
+    console.log("");
+    console.log(heading);
+    choices.forEach((choice, index) => {
+      const marker = index === defaultIndex ? " (default)" : "";
+      console.log(`  ${index + 1}. ${choice.label}${marker} - ${choice.description}`);
+    });
+    const answer = (await askQuestion(rl, `Choose [${defaultIndex + 1}]: `)).trim().toLowerCase();
+    if (!answer) return choices[defaultIndex];
+
+    const number = Number(answer);
+    if (Number.isInteger(number) && number >= 1 && number <= choices.length) {
+      return choices[number - 1];
+    }
+
+    const match = choices.find((choice) => choice.key === answer || choice.label.toLowerCase() === answer);
+    if (match) return match;
+
+    console.log("Please choose one of the listed options.");
+  }
+}
+
+async function askText(rl, label, defaultValue, options = {}) {
+  const required = options.required !== false;
+  const suffix = defaultValue ? ` [${defaultValue}]` : "";
+  while (true) {
+    const answer = (await askQuestion(rl, `${label}${suffix}: `)).trim();
+    if (answer) return answer;
+    if (defaultValue !== undefined) return defaultValue;
+    if (!required) return "";
+    console.log("Please enter a value.");
+  }
+}
+
+async function askSecret(rl, label, options = {}) {
+  const required = options.required === true;
+  while (true) {
+    const originalWrite = rl._writeToOutput;
+    rl.output.write(`${label}: `);
+    rl._writeToOutput = function writeMuted(output) {
+      if (output && output.includes("\n")) {
+        rl.output.write(output);
+        return;
+      }
+      rl.output.write("*");
+    };
+
+    const answer = await new Promise((resolve) => {
+      rl.once("line", resolve);
+    });
+    rl._writeToOutput = originalWrite;
+    rl.output.write("\n");
+
+    const trimmed = String(answer || "").trim();
+    if (trimmed || !required) return trimmed;
+    console.log("Please enter a value.");
+  }
+}
+
+async function askYesNo(rl, label, defaultValue) {
+  const suffix = defaultValue ? " [Y/n]: " : " [y/N]: ";
+  while (true) {
+    const answer = (await askQuestion(rl, `${label}${suffix}`)).trim().toLowerCase();
+    if (!answer) return Boolean(defaultValue);
+    if (["y", "yes", "true"].includes(answer)) return true;
+    if (["n", "no", "false"].includes(answer)) return false;
+    console.log("Please answer yes or no.");
+  }
+}
+
+function askQuestion(rl, question) {
+  return new Promise((resolve) => {
+    rl.question(question, resolve);
+  });
 }
 
 function normalizeApprovalPolicy(policy = {}) {
@@ -722,7 +1144,7 @@ function aiConfigTemplate(config) {
     decisionPath: config.decisionPath,
     commandProtocol: config.commandProtocol,
     approvalPolicy: config.approvalPolicy,
-    modelRouting: config.modelRouting,
+    aiWorkbench: config.aiWorkbench,
     requiredFeatureArtifacts: config.requiredFeatureArtifacts
   };
 }
@@ -834,22 +1256,22 @@ function approvalPolicyJson(approvalPolicy) {
   return JSON.stringify(normalizeApprovalPolicy(approvalPolicy), null, 2);
 }
 
-function aiModelRoutingRows(rows = DEFAULT_AI_MODEL_ROUTING_ROWS) {
-  return rows
-    .map((row) => `| ${row.step} | ${row.provider} | ${row.model} | ${row.riskTier || ""} | ${row.reason} | ${row.reviewer} |`)
+function aiWorkbenchRows(aiWorkbench) {
+  const workbench = normalizeAiWorkbench(aiWorkbench);
+  return STAGE_MODEL_FIELDS
+    .map((field) => `| ${field.label} | \`${workbench.provider}\` | \`${workbench.stageModels[field.key]}\` |`)
     .join("\n");
 }
 
-function aiProviderYaml({ provider = "project-configured", model = "standard-implementation", riskTier = "standard_implementation", strengthRank = 1, reason = "bounded implementation from approved plan", fallbackModel = "premium-review", requiresPremiumReview = false, reviewerRoute = "code_review" } = {}) {
-  const fallbackLine = fallbackModel ? `  fallback_model: ${fallbackModel}\n` : "";
-  return `ai_provider:
-  provider: ${provider}
-  model: ${model}
-  risk_tier: ${riskTier}
-  strength_rank: ${strengthRank}
-  reason: ${reason}
-${fallbackLine}  requires_premium_review: ${requiresPremiumReview}
-  reviewer_route: ${reviewerRoute}`;
+function aiWorkbenchYaml(aiWorkbench) {
+  const workbench = normalizeAiWorkbench(aiWorkbench);
+  return [
+    "ai_workbench:",
+    `  provider: ${workbench.provider}`,
+    "  mode: desktop_or_cli",
+    "  stage_models:",
+    ...STAGE_MODEL_FIELDS.map((field) => `    ${field.key}: ${workbench.stageModels[field.key]}`)
+  ].join("\n");
 }
 
 function updateFeatureRegistry(target, config, featureId, featureName, featureFolderName, options = {}) {
@@ -933,7 +1355,21 @@ When instructions conflict, follow the highest-precedence applicable source:
 6. Vendored \`${config.standardsPath}\` guidance.
 7. General model defaults or habits.
 
-If a request conflicts with the state machine, the state machine wins. Stop and explain the next allowed action.
+If a request conflicts with the state machine, the state machine wins. Stop and explain the next allowed action or required approval.
+
+## Codex Goal Mode
+
+When the selected workbench is Codex, non-trivial or multi-feature work should run under an active \`/goal\`.
+
+\`/goal\` is the continuous objective above individual features, plans, and queue items. It controls scope, queue priority, implementation focus, review focus, and completion criteria.
+
+Goal rules:
+
+- Set or confirm \`/goal\` before \`/start-feature\` for large or multi-step work.
+- Map every feature, queue item, plan operation, and completion summary back to the active goal.
+- Keep the goal active until it is complete, blocked, or explicitly changed by the user.
+- Do not let \`/goal\` override approval gates, feature state, safety rules, or newer user instructions.
+- If \`/goal\` is unavailable in the active Codex surface, record the same objective in \`${config.aiPath}/queues/active.md\` or the active feature artifacts and continue under the normal lifecycle.
 
 ## Boot Sequence
 
@@ -950,6 +1386,7 @@ Before acting, every agent must read:
    - \`${config.standardsPath}/workflows/lifecycle.md\`
    - \`${config.standardsPath}/commands/command-protocol.md\`
 9. Relevant standards in \`${config.standardsPath}/standards/\`
+   - \`${config.standardsPath}/standards/codex-goal-mode.md\` when the selected workbench is Codex.
 
 If the active feature cannot be identified, report \`/status\` and ask for a feature ID only if it cannot be inferred safely.
 
@@ -984,6 +1421,8 @@ Valid feature states are:
 - \`complete\`
 - \`blocked\`
 
+\`requirements_approved\` and \`plan_approved\` are legacy/transient states. In normal flow, approval moves immediately to \`plan_draft\` or \`building\`; do not stop and wait for \`/continue\`.
+
 ## Role Selection
 
 State determines the primary role:
@@ -991,8 +1430,8 @@ State determines the primary role:
 | State | Role |
 | --- | --- |
 | \`intake\`, \`requirements_draft\`, \`requirements_pending_review\` | Requirements Agent |
-| \`requirements_approved\`, \`plan_draft\`, \`plan_pending_review\` | Planner Agent |
-| \`plan_approved\`, \`building\` | Builder Agent |
+| \`requirements_approved\` (legacy), \`plan_draft\`, \`plan_pending_review\` | Planner Agent |
+| \`plan_approved\` (legacy), \`building\` | Builder Agent |
 | \`reviewing\` | Reviewer Agent |
 | \`testing\` | Tester Agent |
 | \`ready_for_human_review\`, \`complete\` | Sync Agent |
@@ -1035,26 +1474,30 @@ ${approvalPolicyTransitionRows(config.approvalPolicy)}
 
 \`human_required\` means an explicit human approval must be recorded before the transition. \`not_required\` means the responsible agent may advance the gate after required artifacts or evidence are ready, recording \`not_required\` in \`${config.featurePath}/<ID>-<slug>/approval.md\` and \`${config.featurePath}/<ID>-<slug>/state.json\`.
 
+Approval commands are compound actions. After \`/approve-requirements\`, move to \`plan_draft\` and start planning. After \`/approve-plan\`, move to \`building\` and start implementation. After \`/complete\`, move to \`complete\`. Do not require \`/continue\` after a successful approval command.
+
+For broad requests such as building a full website, the active plan and \`${config.aiPath}/queues/active.md\` must cover the full original request before implementation starts. When the user approves that plan or says to implement it, the approval covers every queued feature inside the original request. Continue through all unblocked queued features without asking for separate approval before each feature; ask again only for a stop condition, a user-directed scope change, or work outside the original request.
+
 Gate evidence must be recorded in \`${config.featurePath}/<ID>-<slug>/approval.md\` and mirrored in \`${config.featurePath}/<ID>-<slug>/state.json\`.
 
 Agents may record human approval after it is given. Agents must never self-approve a \`human_required\` gate or infer approval from silence.
 
-## AI Model Routing
+## AI Workbench And Models
 
-Every task plan and delivery step must declare \`ai_provider\` before work starts, following \`${config.standardsPath}/standards/ai-model-routing.md\`.
+\`${config.aiPath}/config.json\` \`aiWorkbench\` records the desktop/CLI workbench and the model to use for each delivery stage.
 
-| Step | Provider | Model | Risk Tier | Reason | Reviewer |
-|---|---|---|---|---|---|
-${aiModelRoutingRows()}
+| Stage | Workbench | Model |
+| --- | --- | --- |
+${aiWorkbenchRows(config.aiWorkbench)}
 
 Rules:
 
-- Concrete provider and model names come from \`${config.aiPath}/config.json\` \`modelRouting\`.
-- Replace \`project-configured\` placeholders with approved concrete provider/model/execution values before relying on routed automation.
-- Standard implementation routes must not make final architecture, auth, billing, database, or security decisions.
-- Work touching auth, billing, payments, migrations, permissions, or customer data must receive configured premium-review routing before merge.
-- Pull requests and handoffs must include a model usage summary.
-- Missing model routing fails standards validation.
+- Use the configured workbench for AI-assisted delivery work.
+- Use the configured stage model when starting requirements, planning, building, reviewing, testing, sync, or completion work.
+- Use the \`highRiskReview\` model for final review when work touches auth, permissions, billing, payments, security, customer data, database schema, migrations, tenant boundaries, or architecture.
+- If a model is \`workbench-default\`, use the currently selected/default model in the chosen workbench.
+- When changing to another configured model, post a visible desktop status update before starting the next stage, for example: \`Switching model: Building / GPT-5.3 Codex -> Reviewing / GPT-5.5\`.
+- Plans, reviews, and handoffs should include the simple workbench/model table above.
 
 ## Universal Commands
 
@@ -1070,6 +1513,10 @@ Use these commands in chat, CLI, issues, or PR comments:
 - \`/continue\`
 - \`/complete\`
 
+\`/continue\` is only for resuming after an interruption or stale handoff. It is not part of the normal approval path.
+
+When running in Codex, use \`/goal\` as the top-level objective for large or multi-feature work.
+
 If no CLI subcommand exists for a command, follow the command semantics in \`${config.standardsPath}/commands/command-protocol.md\`.
 
 ## Forbidden Actions
@@ -1078,7 +1525,6 @@ Agents must not:
 
 - Build before the requirements gate is satisfied.
 - Build before the plan gate is satisfied.
-- Build from a plan that is missing AI model routing.
 - Plan before the requirements gate is satisfied.
 - Complete a feature before the implementation gate is satisfied.
 - Self-approve any \`human_required\` gate.
@@ -1106,7 +1552,7 @@ Use the package manager and validation commands declared by this repository. If 
 
 ## Refusal Conditions
 
-The agent must refuse and explain the next allowed action when:
+The agent must refuse and explain the next allowed action or required approval when:
 
 - The requested action is not allowed in the current state.
 - Required gate evidence is missing, stale, revoked, or changes requested.
@@ -1141,11 +1587,11 @@ Before implementation:
 3. Read the active feature state and approval files.
 4. Determine the current role from the state machine.
 5. Do not edit production code until requirements and plan gates are satisfied.
-6. Confirm the active operation declares ai_provider.
+6. Confirm the active plan records the configured workbench and stage models.
 
 During implementation:
 - Work only from approved plan operations.
-- Follow standards/ai-model-routing.md.
+- Follow the configured AI workbench and stage model profile.
 - Add or update tests with the behavior change.
 - Apply the relevant standards.
 - Stop and return to the correct draft state if implementation needs to diverge.
@@ -1185,10 +1631,8 @@ Every non-trivial feature must move through:
 intake
 -> requirements_draft
 -> requirements_pending_review
--> requirements_approved
 -> plan_draft
 -> plan_pending_review
--> plan_approved
 -> building
 -> reviewing
 -> testing
@@ -1197,6 +1641,8 @@ intake
 \`\`\`
 
 The feature may enter \`blocked\` from any non-terminal state.
+
+\`requirements_approved\` and \`plan_approved\` are legacy/transient states. In normal flow, approval moves immediately to \`plan_draft\` or \`building\`.
 
 ## Required Feature Artifacts
 
@@ -1229,7 +1675,18 @@ Gate policy:
 | --- | --- | --- | --- |
 ${approvalPolicyRequiredBeforeRows(config.approvalPolicy)}
 
-\`human_required\` gates need explicit human approval. \`not_required\` gates can advance automatically after the required artifact or evidence exists. Gate evidence lives in \`${config.featurePath}/<ID>-<slug>/approval.md\` and is mirrored in \`state.json\`.
+\`human_required\` gates need explicit human approval. \`not_required\` gates can advance automatically after the required artifact or evidence exists. Gate evidence lives in \`${config.featurePath}/<ID>-<slug>/approval.md\` and is mirrored in \`state.json\`. Satisfying a gate immediately starts the next lifecycle action; \`/continue\` is not required after approval.
+
+For broad requests such as building a full website, the plan must cover the full original request before implementation starts. When the user approves that plan or says to implement it, the agent must continue through every unblocked feature in \`${config.aiPath}/queues/active.md\` without asking for separate approval before each feature. Ask again only for a stop condition, a user-directed scope change, or work outside the original request.
+
+## Codex Goal Mode
+
+When Codex is the selected workbench, use \`/goal\` as the continuous objective above individual features, plans, and queue items.
+
+- Set or confirm \`/goal\` before large or multi-feature work.
+- Keep feature queues and plans aligned to the active goal.
+- Keep the goal active until complete, blocked, or explicitly changed by the user.
+- If \`/goal\` is unavailable, record the same objective in \`${config.aiPath}/queues/active.md\` or the active feature artifacts.
 
 ## Standard Roles
 
@@ -1242,17 +1699,17 @@ ${approvalPolicyRequiredBeforeRows(config.approvalPolicy)}
 
 Role behavior is defined in \`${config.standardsPath}/roles/\`.
 
-## AI Model Routing
+## AI Workbench And Models
 
-Every plan, task, and pull request must include model routing from \`${config.standardsPath}/standards/ai-model-routing.md\`.
+The selected desktop/CLI workbench and stage models are configured in \`${config.aiPath}/config.json\` \`aiWorkbench\`.
 
-| Step | Provider | Model | Risk Tier | Reason | Reviewer |
-|---|---|---|---|---|---|
-${aiModelRoutingRows()}
+| Stage | Workbench | Model |
+| --- | --- | --- |
+${aiWorkbenchRows(config.aiWorkbench)}
 
-Missing routing fails standards validation. Premium-review routing is required for generated work touching auth, billing, payments, migrations, permissions, or customer data. Replace \`project-configured\` placeholders in \`${config.aiPath}/config.json\` before relying on routed automation.
+Use \`highRiskReview\` for final review when work touches auth, permissions, billing, payments, security, customer data, database schema, migrations, tenant boundaries, or architecture. Use \`syncCompletion\` for Sync Agent handoff and completion summaries. \`workbench-default\` means use the model currently selected in the chosen workbench.
 
-Use \`ai-delivery loop init --routed-codex\` when a Desktop Codex thread should orchestrate routed Codex exec jobs. Loop builder and reviewer commands can also use routing placeholders such as \`{provider}\`, \`{model}\`, \`{executionProvider}\`, \`{executionModel}\`, \`{codexConfigArgs}\`, and \`{reviewerCodexConfigArgs}\` to launch the concrete runner/model for each step.
+When the agent changes to another configured model, the desktop should show a visible status update before the next stage starts.
 
 ## Universal Commands
 
@@ -1265,6 +1722,8 @@ Use \`ai-delivery loop init --routed-codex\` when a Desktop Codex thread should 
 - \`/test\`
 - \`/continue\`
 - \`/complete\`
+
+\`/approve-requirements\`, \`/approve-plan\`, and \`/complete\` immediately advance to the next state. \`/continue\` is only for resuming interrupted work.
 
 ## Common Commands
 
@@ -1370,7 +1829,31 @@ If a command does not exist yet, record the gap here instead of inventing one.
 function activeQueueTemplate() {
   return `# Active Feature Queue
 
-Use this file when a request contains multiple independent features.
+Use this file when a request contains multiple independent features or a broad deliverable such as a full website.
+
+## Queue Policy
+
+- This queue is the implementation plan for the full original request.
+- Include every known feature, page, flow, integration, shared operation, and validation pass needed to satisfy that request.
+- Continue automatically to the next unblocked feature after the user approves this plan or says to implement it.
+- Ask the user again only for a stop condition, a user-directed scope change, or work outside the original request.
+
+## Original Request
+
+| Field | Value |
+| --- | --- |
+| Request | <original user request> |
+| Approved Plan Scope | <what implementation approval covers> |
+| Out Of Scope | <items not included or deferred> |
+| Implementation Agreement | <pending/approved/not_required> |
+
+## Active Goal
+
+| Field | Value |
+| --- | --- |
+| Codex Goal | <active /goal text or fallback objective> |
+| Goal Status | <active/blocked/complete/changed> |
+| Completion Criteria | <how the queue proves the goal is done> |
 
 | Order | Feature ID | State | Objective | Dependencies | Notes |
 | --- | --- | --- | --- | --- | --- |
@@ -1509,7 +1992,7 @@ Use this section for AI-enabled features.
 `;
 }
 
-function featurePlanTemplate(featureId, featureName, approvalPolicy = DEFAULT_APPROVAL_POLICY) {
+function featurePlanTemplate(featureId, featureName, approvalPolicy = DEFAULT_APPROVAL_POLICY, aiWorkbench = DEFAULT_AI_WORKBENCH) {
   const policy = normalizeApprovalPolicy(approvalPolicy);
   const requirementsGateStatus = approvalStatusLabel(policy, "requirements");
   return `# Plan: ${featureName}
@@ -1531,38 +2014,38 @@ updated: ${today()}
 - [ ] Requirements gate status is mirrored in \`state.json\`.
 - [ ] Relevant repository context has been inspected.
 - [ ] Relevant standards have been identified.
-- [ ] AI model routing is declared before work starts.
+- [ ] AI workbench and stage models are recorded before work starts.
 
 ## Implementation Rules
 
 - Implement only approved scope from \`requirements.md\`.
-- Follow \`standards/ai-model-routing.md\` for every operation.
+- Follow the configured AI workbench and stage model profile.
 - Work operation by operation.
 - Update tests with the operation that changes behavior.
 - Stop and return to the right draft state if the implementation needs to diverge.
 
-## AI Model Routing
+## AI Workbench And Models
 
-Every operation must include an \`ai_provider\` block.
+Use the configured stage model for each delivery stage. Use \`syncCompletion\` for Sync Agent handoff and completion summaries. Use \`highRiskReview\` for final review when work touches auth, permissions, billing, payments, security, customer data, database schema, migrations, tenant boundaries, or architecture.
 
-| Step | Provider | Model | Risk Tier | Reason | Reviewer |
-|---|---|---|---|---|---|
-${aiModelRoutingRows()}
+| Stage | Workbench | Model |
+| --- | --- | --- |
+${aiWorkbenchRows(aiWorkbench)}
 
 ## Operation Plan
 
-| Step | Status | Operation | Provider | Model | Reviewer | Files Or Modules | Tests | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Not started | <operation> | <provider> | <model> | <reviewer> | <files> | <tests> | <notes> |
+| Step | Status | Operation | Stage Model | Files Or Modules | Tests | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | Not started | <operation> | <model> | <files> | <tests> | <notes> |
 
 ## Detailed Operations
 
 ### Operation 1: <name>
 
-AI Provider:
+AI workbench:
 
 \`\`\`yaml
-${aiProviderYaml()}
+${aiWorkbenchYaml(aiWorkbench)}
 \`\`\`
 
 Purpose:
@@ -1597,12 +2080,12 @@ Rollback:
 
 - [ ] Operations are ordered and bounded.
 - [ ] Acceptance criteria map to tests.
-- [ ] AI model routing is complete for every operation.
+- [ ] AI workbench and stage model profile is recorded.
 - [ ] Plan is ready for the configured approval policy.
 `;
 }
 
-function featureTestsTemplate(featureId, featureName) {
+function featureTestsTemplate(featureId, featureName, aiWorkbench = DEFAULT_AI_WORKBENCH) {
   return `# Tests: ${featureName}
 
 \`\`\`yaml
@@ -1621,15 +2104,13 @@ updated: ${today()}
 
 Describe how this feature will be validated.
 
-## AI Model Routing
+## AI Workbench And Models
 
-Use \`standards/ai-model-routing.md\` when selecting models for test design and test generation.
+Use the configured testing model for normal test generation. Use \`highRiskReview\` for security-sensitive test design.
 
-| Step | Provider | Model | Risk Tier | Reason | Reviewer |
-|---|---|---|---|---|---|
-| Unit tests | <provider> | <model> | standard_implementation | Cost-effective standard coverage | <code_review route> |
-| Edge case tests | <provider> | <model> | standard_review | Failure-mode reasoning | N/A |
-| Security tests | <provider> | <model> | premium_review | Security-sensitive coverage | N/A |
+| Stage | Workbench | Model |
+| --- | --- | --- |
+${aiWorkbenchRows(aiWorkbench)}
 
 ## Acceptance Criteria Traceability
 
@@ -1664,7 +2145,7 @@ Use \`standards/ai-model-routing.md\` when selecting models for test design and 
 `;
 }
 
-function featureReviewTemplate(featureId, featureName) {
+function featureReviewTemplate(featureId, featureName, aiWorkbench = DEFAULT_AI_WORKBENCH) {
   return `# Review: ${featureName}
 
 \`\`\`yaml
@@ -1683,21 +2164,20 @@ updated: ${today()}
 - Plan:
 - Diff:
 
-## AI Model Routing
+## AI Workbench And Models
 
-- [ ] Every step has an \`ai_provider\` field.
-- [ ] Final review route is equal or stronger than the implementation route.
-- [ ] Configured premium-review routing covered any work touching auth, billing, payments, migrations, permissions, or customer data.
+- [ ] Review used the configured \`reviewing\` model.
+- [ ] High-risk work used the configured \`highRiskReview\` model for final review.
 
-| Step | Provider | Model | Risk Tier | Reason | Reviewer |
-|---|---|---|---|---|---|
-${aiModelRoutingRows()}
+| Stage | Workbench | Model |
+| --- | --- | --- |
+${aiWorkbenchRows(aiWorkbench)}
 
 ## Pull Request Model Usage Summary
 
-| Step | Provider | Model | Risk Tier | Reason | Reviewer |
-|---|---|---|---|---|---|
-| <step> | <provider> | <model> | <risk-tier> | <reason> | <reviewer> |
+| Stage | Workbench | Model | Notes |
+| --- | --- | --- | --- |
+| <stage> | <workbench> | <model> | <notes> |
 
 ## Findings By Severity
 
@@ -1748,6 +2228,8 @@ updated: ${today()}
 \`\`\`
 
 ## Approval Policy
+
+Policy is copied from \`.ai/config.json\` when the feature is created. \`human_required\` gates need explicit human approval. \`not_required\` gates can advance automatically after the required artifact or evidence exists. Once a gate is satisfied, state advances immediately: requirements to \`plan_draft\`, plan to \`building\`, and implementation to \`complete\`.
 
 | Gate | Required | Status |
 | --- | --- | --- |
@@ -1947,35 +2429,27 @@ function readJson(filePath, fallback) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
-function checkModelRouting(modelRouting) {
+function checkAiWorkbench(aiWorkbench) {
+  const workbench = normalizeAiWorkbench(aiWorkbench);
   const checks = [
     {
-      ok: modelRouting && typeof modelRouting === "object" && !Array.isArray(modelRouting),
-      label: "V2 config model routing matrix",
-      detail: ".ai/config.json modelRouting"
+      ok: aiWorkbench && typeof aiWorkbench === "object" && !Array.isArray(aiWorkbench),
+      label: "V2 config AI workbench",
+      detail: ".ai/config.json aiWorkbench"
+    },
+    {
+      ok: WORKBENCH_CHOICES.some((choice) => choice.key === workbench.provider),
+      label: "AI workbench provider is supported",
+      detail: workbench.provider
     }
   ];
 
-  for (const routeKey of REQUIRED_MODEL_ROUTING_KEYS) {
-    const route = modelRouting && modelRouting[routeKey];
-    const routePresent = route && typeof route === "object" && !Array.isArray(route);
+  for (const field of STAGE_MODEL_FIELDS) {
     checks.push({
-      ok: routePresent,
-      label: `model routing route ${routeKey}`,
-      detail: ".ai/config.json modelRouting"
+      ok: Boolean(workbench.stageModels[field.key]),
+      label: `AI workbench model for ${field.key}`,
+      detail: ".ai/config.json aiWorkbench.stageModels"
     });
-
-    if (routePresent) {
-      const missingFields = ["provider", "model", "reason", "requires_premium_review"]
-        .filter((field) => route[field] === undefined || route[field] === "");
-      checks.push({
-        ok: missingFields.length === 0,
-        label: `model routing route ${routeKey} required fields`,
-        detail: missingFields.length > 0
-          ? `missing ${missingFields.join(", ")}`
-          : ".ai/config.json modelRouting"
-      });
-    }
   }
 
   return checks;

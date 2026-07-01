@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-delivery-standards.local/schemas/ai-workbench.schema.json",
+  "title": "AI Delivery Workbench",
+  "type": "object",
+  "required": ["aiWorkbench"],
+  "properties": {
+    "aiWorkbench": {
+      "type": "object",
+      "required": ["provider", "mode", "stageModels"],
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["codex", "claude", "cursor"]
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["desktop_or_cli"]
+        },
+        "stageModels": {
+          "type": "object",
+          "required": ["requirements", "planning", "building", "reviewing", "testing", "syncCompletion", "highRiskReview"],
+          "additionalProperties": false,
+          "properties": {
+            "requirements": { "$ref": "#/$defs/modelName" },
+            "planning": { "$ref": "#/$defs/modelName" },
+            "building": { "$ref": "#/$defs/modelName" },
+            "reviewing": { "$ref": "#/$defs/modelName" },
+            "testing": { "$ref": "#/$defs/modelName" },
+            "syncCompletion": { "$ref": "#/$defs/modelName" },
+            "highRiskReview": { "$ref": "#/$defs/modelName" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "modelName": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

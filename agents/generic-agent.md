@@ -31,16 +31,15 @@ Required bugfix artifact:
 
 - `bugfix-spec.md`
 
-## AI Model Routing
+## AI Workbench And Models
 
-Every task plan and delivery step must declare `ai_provider` before work starts, following `standards/ai-model-routing.md`.
+Plans, reviews, handoffs, and pull requests should record the configured AI workbench and stage model profile from `standards/ai-workbench.md`.
 
-- Planning, architecture, database schema, edge-case tests, code review, security review, auth, billing, payments, and marketing copy use the configured premium-review or standard-review routes.
-- Implementation, refactoring, standard unit tests, and low-risk documentation may use configured standard implementation routes.
-- Standard implementation routes may implement code but must not make final architecture, auth, billing, database, or security decisions.
-- Any standard implementation route work touching auth, billing, payments, migrations, permissions, or customer data must receive configured premium-review routing before merge.
+- Use the configured stage model for requirements, planning, building, reviewing, testing, sync, and completion work.
+- Use the configured `highRiskReview` model for final review when work touches auth, permissions, billing, payments, security, customer data, database schema, migrations, tenant boundaries, or architecture.
+- Show a visible desktop status update before switching to another configured model.
 - Pull requests and handoffs must include the model usage summary table.
-- Missing model routing fails standards validation.
+- Missing AI workbench/model selection must be fixed before handoff.
 
 ## Trivial Versus Non-Trivial Work
 
@@ -81,7 +80,7 @@ If a project states Bun-only, use Bun commands such as `bun install`, `bun run <
 | Bug fix | `bugfix-spec.md`, plus related feature specs if behavior changes | Reproduction or bounded evidence, regression test, focused affected suite. |
 | API, data, auth, security, infrastructure, or migration change | Feature spec plus ADR when long-lived architecture changes | Contract, integration, security, migration, and rollback validation. |
 | Refactor | Refactor plan and test plan | Characterization tests, focused suite, broader checks when shared behavior changed. |
-| Multiple independent features | `.ai/queues/active.md` plus per-feature artifacts | Complete validation, self-review, and critic review per feature. |
+| Multiple independent features or broad deliverable | `.ai/queues/active.md` plus per-feature artifacts | Full-request plan, then complete validation, self-review, and critic review per feature. |
 
 ## Operating Mode
 
@@ -95,7 +94,7 @@ The agent acts as a disciplined engineering collaborator:
 6. Update specs when the code or requirements change.
 7. Summarize evidence, risks, and remaining gaps.
 
-When the user gives multiple independent features, switch to `workflows/autonomous-feature-queue.md`: maintain an explicit queue, finish each feature with validation and review evidence, then continue to the next unblocked feature without asking the user to continue or approve the next start. Ask only when a hard stop condition applies.
+When the user gives multiple independent features or a broad deliverable such as a full website, switch to `workflows/autonomous-feature-queue.md`: first create a full-request plan and explicit queue that covers the original request, then finish each feature with validation and review evidence. Once the user approves the plan or says to implement it, continue to the next unblocked feature without asking the user to continue or approve the next start. Ask only when a hard stop condition applies, the user changes direction, or work would go outside the original request.
 
 ## Standard Workflow
 
@@ -120,7 +119,7 @@ flowchart TD
 | Request Type | Required Action |
 | --- | --- |
 | New project | Follow `workflows/new-project.md`. |
-| Multiple independent features | Follow `workflows/autonomous-feature-queue.md`, then run the relevant feature workflow for each item. |
+| Multiple independent features or broad deliverable | Follow `workflows/autonomous-feature-queue.md`, then run the relevant feature workflow for each item. |
 | New feature | Follow `workflows/new-feature.md`. |
 | Bug fix | Follow `workflows/bug-fix.md`. |
 | Refactor | Follow `workflows/refactor.md`. |
@@ -148,7 +147,7 @@ Before editing code:
 - Confirm required artifacts exist.
 - Confirm the feature spec has acceptance criteria.
 - Confirm the implementation plan has ordered operations.
-- Confirm every operation declares `ai_provider`.
+- Confirm every operation declares `ai_model`.
 - Confirm the test plan covers normal, boundary, negative, and regression cases.
 - Identify relevant standards.
 

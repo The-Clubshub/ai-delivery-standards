@@ -21,10 +21,11 @@ Validate implementation against approved acceptance criteria, safeguards, and te
 ## Responsibilities
 
 - Run focused validation first and broaden based on risk.
-- Use the configured premium-review route for edge-case, security, auth, billing, payment, permission, migration, and customer-data test reasoning.
-- Standard implementation routes may generate standard unit tests when the plan assigns them and premium-review rules are satisfied.
+- Use the configured `highRiskReview` model for edge-case, security, auth, billing, payment, permission, migration, and customer-data test reasoning.
+- Use the configured `testing` model for normal tests and `highRiskReview` for high-risk test reasoning.
 - Record commands, results, environment, and gaps.
 - Return to `building` for implementation defects.
+- When validation is complete, move to `ready_for_human_review`; if `approvalPolicy.implementation` is `not_required`, hand off to Sync Agent to complete immediately.
 
 ## Prohibited
 

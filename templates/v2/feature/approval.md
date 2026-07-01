@@ -10,7 +10,7 @@ updated: YYYY-MM-DD
 
 ## Approval Policy
 
-Policy is copied from `.ai/config.json` when the feature is created. `human_required` gates need explicit human approval. `not_required` gates can advance automatically after the required artifact or evidence exists.
+Policy is copied from `.ai/config.json` when the feature is created. `human_required` gates need explicit human approval. `not_required` gates can advance automatically after the required artifact or evidence exists. Once a gate is satisfied, state advances immediately: requirements to `plan_draft`, plan to `building`, and implementation to `complete`.
 
 | Gate | Required | Status |
 | --- | --- | --- |

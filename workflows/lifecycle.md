@@ -6,10 +6,8 @@ Every non-trivial feature follows the V2 state machine.
 intake
 -> requirements_draft
 -> requirements_pending_review
--> requirements_approved
 -> plan_draft
 -> plan_pending_review
--> plan_approved
 -> building
 -> reviewing
 -> testing
@@ -25,11 +23,15 @@ Approval gates are configured in `.ai/config.json`.
 
 | Gate | Transition | Command When Human Required | Default Policy |
 | --- | --- | --- | --- |
-| Requirements | `requirements_pending_review -> requirements_approved` | `/approve-requirements` | `human_required` |
-| Plan | `plan_pending_review -> plan_approved` | `/approve-plan` | `human_required` |
+| Requirements | `requirements_pending_review -> plan_draft` | `/approve-requirements` | `human_required` |
+| Plan | `plan_pending_review -> building` | `/approve-plan` | `human_required` |
 | Implementation | `ready_for_human_review -> complete` | `/complete` | `human_required` |
 
 When a gate is `not_required`, the responsible agent may make the same transition after the required artifact or evidence exists, and must record `not_required` in `approval.md` and `state.json`.
+
+`requirements_approved` and `plan_approved` are legacy/transient states. Do not stop there during normal flow; move immediately to `plan_draft` or `building`.
+
+For a broad or multi-feature original request, the plan gate applies to the whole request. The plan must cover the full requested deliverable and queue every required feature before implementation starts. Once the user approves that plan or agrees to implementation, the lifecycle continues through every unblocked queued feature without separate per-feature approval.
 
 ## Forbidden Transitions
 
